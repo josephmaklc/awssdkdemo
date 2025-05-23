@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head th:include="fragments/layout :: headerFragment">
+	</head>
+<body>
+
+
+
+<div class="container">
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item"><a href="/s3buckets">S3 Buckets</a></li>
+	<li class="breadcrumb-item"><a th:href="'/s3bucket?bucketname='+${bucket}">S3 Objects</a></li>
+    <li class="breadcrumb-item active" aria-current="page">S3 Object</li>
+  </ol>
+</nav>
+
+	
+<h1>S3 Object</h1>
+
+
+<b>Bucket: </b> <div th:remove="tag" th:text=${bucket}/>
+<p/>
+<b>Filename: </b> <div th:remove="tag" th:text=${item}/>
+<p/>
+<p/>
+<b>Content</b>:
+<p/>
+<div th:remove="tag" th:text="${fileData}"/>
+<p/>
+
+</body>
+</html>

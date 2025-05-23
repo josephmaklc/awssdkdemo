@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head th:include="fragments/layout :: headerFragment">
+	</head>
+
+   <body>
+      <script>
+         
+         function deleteItem() {
+         var bucket = $("#bucket").val();
+		 var deleteThisItem = $("#deleteId").text();
+         console.log("deleting this item:"+deleteThisItem+" in "+bucket)
+		 $.ajax({
+		   type: "POST",
+		   url: "/s3/deleteItem",
+		   data: JSON.stringify({ 
+		     bucketName: bucket,
+		     itemKey: deleteThisItem
+		   }),
+		   contentType: "application/json", // or "text", "html", etc.
+		   success: function(response) {
+		     console.log("Success:", response);
+			 location.reload()
+		   },
+		   error: function(xhr, status, error) {
+		     console.error("Error:", status, error);
+		   }
+		 });
+         }
+      </script>
+	  
+      <div class="container">
+
+		<nav aria-label="breadcrumb">
+		  <ol class="breadcrumb">
+		    <li class="breadcrumb-item"><a href="/">Home</a></li>
+		    <li class="breadcrumb-item"><a href="/s3buckets">S3 Buckets</a></li>
+		    <li class="breadcrumb-item active" aria-current="page">S3 Objects</li>
+		  </ol>
+		</nav>
+				
+      <h1>S3 Objects</h1>
+      S3 objects are files, images, videos, etc 
+      <p/>
+      <p/>
+         <b>Bucket: </b> 
+      <div th:remove="tag" th:text=${bucket}/>
+	  <input type="hidden" id="bucket" th:value="${bucket}"/>
+      
+	  
+	  <table class="table table-bordered">
+            <thead class="table-dark">
+               <tr>
+                  <td with="95%">Name</td>
+                  <td width="5%">&nbsp;</td>
+               </tr>
+            </thead>
+            <tr th:each="item: ${items}">
+               <td><a th:href="'/s3/item?bucket='+${bucket}+'&item='+${item}" th:text="${item}"/></td>
+               <td style="text-align:center"> 
+                  <button class="btn" th:data-myvar="${item}" th:onClick="confirmDeleteItem(this.getAttribute('data-myvar'))">
+					<i class="bi bi-trash3"></i>
+				</button>
+               </td>
+      </div>
+      </table>
+	  
+	  
+      <p/>
+	  <a th:href="'/s3/addnewfile?bucket='+${bucket}" class="btn btn-primary" role="button">Add</a>
+<!--/*
+      <b>Add new file</b>
+      <form method="POST" action="/s3/uploadFile" enctype="multipart/form-data">
+         <input type="hidden" name="bucket" th:value="${bucket}"/>
+         <table>
+            <tr>
+               <td>
+                  <form:label path="file">Select a file to upload</form:label>
+               </td>
+               <td><input type="file" name="file" /></td>
+            </tr>
+            <tr>
+               <td><input type="submit" class="btn btn-secondary" value="Submit" /></td>
+            </tr>
+         </table>
+      </form>
+*/-->	  
+	  
+	  <div th:insert="fragments/deletedialog"/>
+
+   </body>
+</html>

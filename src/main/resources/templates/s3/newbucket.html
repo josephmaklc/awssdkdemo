@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:include="fragments/layout :: headerFragment">
+</head>
+<script>
+	$(document).ready(function() {
+
+	  $('#addButton').click(function() {
+	    console.log("on click");
+		var newBucketName = $("#bucketName").val();
+	    console.log("adding this newBucketName:" + newBucketName);
+		$("#message").removeClass();
+		$.ajax({
+	      type: "POST",
+	      url: "/s3/addBucket",
+	      data: JSON.stringify({
+	        bucketName: newBucketName
+	      }),
+	      contentType: "application/json",
+	      success: function(response) {
+	        console.log("response is:", response);
+			if (response == 'SUCCESS') {
+	          $("#message").addClass("alert alert-success");
+			  $("#message").text("Bucket added");
+	        } else {
+	          $("#message").addClass("alert alert-danger");
+			  $("#message").text(response);
+
+	        }
+	      },
+	      error: function(xhr, status, error) {
+			$("#message").addClass("alert alert-danger");
+			$("#message").text("An error occured");
+
+	        console.error("Error:", status, error);
+			
+
+	      }
+	    });
+
+	  });
+
+	}); //ready	  
+	  
+	</script>
+<body>
+
+
+<div class="container">
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+	    <li class="breadcrumb-item"><a href="/s3buckets">S3 Buckets</a></li>
+	    <li class="breadcrumb-item active" aria-current="page">Add New Bucket</li>
+	  </ol>
+	</nav>	
+
+<h1>Add New Bucket</h1>
+
+Bucket names must be 3 to 63 characters and unique within the global namespace. 
+Bucket names must also begin and end with a letter or number. Valid characters are a-z, 0-9, periods (.), and hyphens (-)<p/>
+<p/>
+Bucket name: <input type="text" id="bucketName"/>
+<p/>
+<div id="message" role="alert"></div>
+<p/>
+<button id="addButton" class="btn btn-primary">Add</button>
+<a href="javascript:history.back()" class="btn btn-secondary" role="button">Cancel</a>
+<p/>
+
+</div>
+
+</body>
+</html>

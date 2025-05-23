@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:include="fragments/layout :: headerFragment">
+</head>
+<body>
+
+
+<div class="container">
+
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+		<li class="breadcrumb-item active" aria-current="page">S3 Buckets</li>
+	  </ol>
+	</nav>
+
+<h1>S3 Buckets</h1>
+
+S3 buckets are essentially digital "folders" where you store data in the form of objects (files, images, videos, etc.). 
+<p/>
+
+<script>
+        
+        function deleteItem() {
+	 var deleteThisItem = $("#deleteId").text();
+        console.log("deleting this item:"+deleteThisItem)
+	 $.ajax({
+	   type: "POST",
+	   url: "/s3/deleteBucket",
+	   data: JSON.stringify({ 
+	     bucketName: deleteThisItem
+	   }),
+	   contentType: "application/json", // or "text", "html", etc.
+	   success: function(response) {
+	     console.log("Success:", response);
+		 location.reload()
+	   },
+	   error: function(xhr, status, error) {
+	     console.error("Error:", status, error);
+	   }
+	 });
+        }
+     </script>
+
+	 <div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+		
+<table class="table table-bordered">
+  <thead class="table-dark">
+      <tr>
+         <td with="95%">Name</td>
+         <td width="5%">&nbsp;</td>
+      </tr>
+   </thead>
+   
+	<tr th:each="bucket: ${buckets}">
+    <td><a th:href="'/s3/bucket?bucketname='+${bucket}" th:text="${bucket}"/></td>
+	<td style="text-align:center"> 
+	                 <button class="btn" th:data-myvar="${bucket}" th:onClick="confirmDeleteItem(this.getAttribute('data-myvar'))">
+					<i class="bi bi-trash3"></i>
+				</button>
+	</td>
+	
+</table>
+<div th:insert="fragments/deletedialog"/>
+<a href="/s3/addnewbucket" class="btn btn-primary" role="button">Add</a>
+
+</div>
+
+</body>
+</html>
