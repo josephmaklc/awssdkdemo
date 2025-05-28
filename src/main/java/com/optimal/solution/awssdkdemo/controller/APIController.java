@@ -6,10 +6,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.optimal.solution.awssdkdemo.model.DynamoTableIdentitifer;
 import com.optimal.solution.awssdkdemo.model.S3ItemIdentifier;
+import com.optimal.solutions.awsutils.DynamoUtils;
 import com.optimal.solutions.awsutils.S3Utils;
 
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @RestController
@@ -66,4 +69,19 @@ public class APIController {
 
 	}
 
+	@PostMapping("/dynamo/deleteTable")
+	public String deleteDynamoTable(@RequestBody DynamoTableIdentitifer request) {
+		log.info("delete table: "+request.getTableName());
+
+		DynamoDbClient s3Client = DynamoDbClient.builder().region(region).build();
+
+		DynamoUtils dynamoUtils = new DynamoUtils();
+		try {
+			dynamoUtils.deleteTable(s3Client, request.getTableName());
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return "SUCCESS";
+
+	}
 }

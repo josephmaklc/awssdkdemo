@@ -47,7 +47,8 @@
          <b>Bucket: </b> 
       <div th:remove="tag" th:text=${bucket}/>
 	  <input type="hidden" id="bucket" th:value="${bucket}"/>
-      
+	  <div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
 	  
 	  <table class="table table-bordered">
             <thead class="table-dark">
@@ -68,7 +69,7 @@
 	  
 	  
       <p/>
-	  <a th:href="'/s3/addnewfile?bucket='+${bucket}" class="btn btn-primary" role="button">Add</a>
+	  <a th:if="${#strings.isEmpty(error)}" th:href="'/s3/addnewfile?bucket='+${bucket}" class="btn btn-primary" role="button">Add</a>
 <!--/*
       <b>Add new file</b>
       <form method="POST" action="/s3/uploadFile" enctype="multipart/form-data">

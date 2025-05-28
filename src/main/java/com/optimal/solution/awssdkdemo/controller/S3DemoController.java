@@ -21,7 +21,6 @@ import com.optimal.solutions.awsutils.S3Utils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Controller
@@ -29,25 +28,28 @@ public class S3DemoController {
 
 	Logger log = LoggerFactory.getLogger(S3DemoController.class);
 
-
-
 	@GetMapping("/s3/bucket")
 	public ModelAndView bucketDetails(@RequestParam String bucketname) {
 
 		S3Client s3Client = S3Client.builder().region(Constants.REGION).build();
 
 		S3Utils s3Utils = new S3Utils();
-		List<String> items = s3Utils.listItemsInBucket(s3Client, bucketname, null);
+		String error=null;
+		
+		List<String> items = null;
+		try {
+			items = s3Utils.listItemsInBucket(s3Client, bucketname, null);
+		} catch (Exception e) {
+			log.error("Cannot list items in bucket",e);
+			error = e.getMessage();
+		}
 
 		s3Client.close();
-		
-		//for (String item : items) {
-		//	log.info(item);
-		//}
 		ModelAndView result = new ModelAndView();
 		result.setViewName("s3/itemslist");
 		result.addObject("bucket", bucketname);
 		result.addObject("items", items);
+		result.addObject("error", error);
 		return result;
 	}
 

@@ -1,0 +1,14 @@
+package com.optimal.solution.awssdkdemo.model;
+
+public class DynamoTableIdentitifer {
+	private String tableName;
+
+	public String getTableName() {
+		return tableName;
+	}
+
+	public void setTableName(String tableName) {
+		this.tableName = tableName;
+	}
+	
+}

@@ -3,18 +3,24 @@ package com.optimal.solution.awssdkdemo.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.optimal.solution.awssdkdemo.Constants;
+import com.optimal.solutions.awsutils.DynamoUtils;
 import com.optimal.solutions.awsutils.S3Utils;
 
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Controller
 public class HomeController {
 
+	Logger log = LoggerFactory.getLogger(HomeController.class);
+	
 	@GetMapping("/")
 	public ModelAndView index() {
 		ModelAndView result = new ModelAndView();
@@ -24,7 +30,7 @@ public class HomeController {
 
 
 	@GetMapping("/s3buckets")
-	public ModelAndView s3demo() {
+	public ModelAndView s3Demo() {
 
 		S3Client s3Client = S3Client.builder().region(Constants.REGION).build();
 
@@ -40,6 +46,29 @@ public class HomeController {
 		ModelAndView result = new ModelAndView();
 		result.setViewName("s3/buckets");
 		result.addObject("buckets", buckets);
+		result.addObject("error", message);
+		return result;
+
+	}
+
+	@GetMapping("/dynamo")
+	public ModelAndView dynamoDemo() {
+		log.info("listing all dynamo tables");
+		DynamoDbClient dynamoDbClient = DynamoDbClient.builder().region(Constants.REGION).build();
+
+		DynamoUtils dbUtils = new DynamoUtils();
+		String message = "";
+		List<String> tables = new ArrayList<>();
+		try {
+			tables = dbUtils.listAllTables(dynamoDbClient);
+		} catch (Exception e) {
+			message = e.getMessage();
+		}
+		dynamoDbClient.close();
+		
+		ModelAndView result = new ModelAndView();
+		result.setViewName("dynamo/tables");
+		result.addObject("tables", tables);
 		result.addObject("error", message);
 		return result;
 

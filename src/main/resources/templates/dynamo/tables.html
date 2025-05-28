@@ -11,30 +11,41 @@
 	<nav aria-label="breadcrumb">
 	  <ol class="breadcrumb">
 	    <li class="breadcrumb-item"><a href="/">Home</a></li>
-		<li class="breadcrumb-item active" aria-current="page">S3 Buckets</li>
+		<li class="breadcrumb-item active" aria-current="page">Dynamo Tables</li>
 	  </ol>
 	</nav>
 
-<h1>S3 Buckets</h1>
+<h1>DynamoDB Tables</h1>
 
-S3 buckets are essentially digital "folders" where you store data in the form of objects (files, images, videos, etc.). 
 <p/>
 
 <script>
         
-    function deleteItem() {
+     function deleteItem() {
 	 var deleteThisItem = $("#deleteId").text();
         console.log("deleting this item:"+deleteThisItem)
 	 $.ajax({
 	   type: "POST",
-	   url: "/s3/deleteBucket",
+	   url: "/dynamo/deleteTable",
 	   data: JSON.stringify({ 
-	     bucketName: deleteThisItem
+	     tableName: deleteThisItem
 	   }),
 	   contentType: "application/json", // or "text", "html", etc.
 	   success: function(response) {
 	     console.log("Success:", response);
-		 location.reload()
+		 if (response == 'SUCCESS') {
+		 	          $("#messageDelete").addClass("alert alert-success");
+		 			  $("#messageDelete").text("Table added");
+
+		 	        } else {
+		 	          $("#messageDelete").addClass("alert alert-danger");
+		 			  $("#messageDelete").text(response);
+
+		 	        }
+					setTimeout(function() {
+					  // Code to be executed after some time
+					  location.reload()
+					}, 2000);
 	   },
 	   error: function(xhr, status, error) {
 	     console.error("Error:", status, error);
@@ -44,6 +55,7 @@ S3 buckets are essentially digital "folders" where you store data in the form of
      </script>
 
 	 <div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+	 <div id="messageDelete" role="alert"></div>
 		
 <table class="table table-bordered">
   <thead class="table-dark">
@@ -53,17 +65,17 @@ S3 buckets are essentially digital "folders" where you store data in the form of
       </tr>
    </thead>
    
-	<tr th:each="bucket: ${buckets}">
-    <td><a th:href="'/s3/bucket?bucketname='+${bucket}" th:text="${bucket}"/></td>
+	<tr th:each="table: ${tables}">
+    <td><a th:href="'/dynamo/describeTable?tableName='+${table}" th:text="${table}"/></td>
 	<td style="text-align:center"> 
-	                 <button class="btn" th:data-myvar="${bucket}" th:onClick="confirmDeleteItem(this.getAttribute('data-myvar'))">
+	                 <button class="btn" th:data-myvar="${table}" th:onClick="confirmDeleteItem(this.getAttribute('data-myvar'))">
 					<i class="bi bi-trash3"></i>
 				</button>
 	</td>
 	
 </table>
 <div th:insert="fragments/deletedialog"/>
-<a href="/s3/addnewbucket" class="btn btn-primary" role="button">Add</a>
+<a href="/dynamo/addnewtable" class="btn btn-primary" role="button">Add</a>
 
 </div>
 
