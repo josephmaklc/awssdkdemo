@@ -5,9 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import software.amazon.awssdk.core.waiters.WaiterResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -30,7 +33,6 @@ import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesRequest;
 import software.amazon.awssdk.services.dynamodb.model.ListTablesResponse;
 import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
-import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughputDescription;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
@@ -42,6 +44,7 @@ import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter;
+
 
 public class DynamoUtils {
 //https://aws.amazon.com/blogs/database/choosing-the-right-dynamodb-partition-key/
@@ -375,9 +378,18 @@ public class DynamoUtils {
 	}
 
 
-	public void createTable(DynamoDbClient ddb, String tableName, String key, String keyType) {
+	public void createTable(DynamoDbClient ddb, String tableName, String key, String keyType, String sortKey, String sortKeyType) throws Exception{
+		if (sortKey.isEmpty()) {
+			createTablePrimaryKeyOnly(ddb,tableName,key,keyType);
+		}
+		else {
+			createTableCompositeKey(ddb, tableName, key, keyType, sortKey, sortKeyType);
+		}
+	}
+	
+	public void createTablePrimaryKeyOnly(DynamoDbClient ddb, String tableName, String key, String keyType) throws Exception{
 
-		System.out.println("creating Dynamno DB table: " + tableName + " key: " + key + " keyType: " + keyType);
+		log.info("creating Dynamno DB table: " + tableName + " key: " + key + " keyType: " + keyType);
 		DynamoDbWaiter dbWaiter = ddb.waiter();
 		CreateTableRequest request = CreateTableRequest.builder()
 				.attributeDefinitions(AttributeDefinition.builder().attributeName(key).attributeType(keyType).build())
@@ -397,7 +409,8 @@ public class DynamoUtils {
 			System.out.println("Table created: " + newTable);
 
 		} catch (DynamoDbException e) {
-			System.out.println("Error creating table: " + e.getMessage());
+			log.error("Error creating table: ",e);
+			throw e;
 		}
 	}
 
@@ -535,12 +548,12 @@ public class DynamoUtils {
 		} else if (attributeValue.bool() != null) {
 			type = "Boolean";
 			value = attributeValue.bool();
+		}else if (attributeValue.m() != null) {
+			type = "Map";
+			value = attributeValue.m();
 		} else if (attributeValue.l() != null) {
 			type = "List";
 			value = attributeValue.l();
-		} else if (attributeValue.m() != null) {
-			type = "Map";
-			value = attributeValue.m();
 		} else if (attributeValue.b() != null) {
 			type = "Byte";
 			value = attributeValue.b();
@@ -564,30 +577,108 @@ public class DynamoUtils {
 		return result;
 
 	}
+	
+	public static String convertScanResponseToJson(ScanResponse scanResponse) {
+        try {
+            List<Map<String, AttributeValue>> items = scanResponse.items();
+            List<Map<String, Object>> jsonData = new ArrayList<>();
+            ObjectMapper objectMapper = new ObjectMapper();
 
-	public void scanTable(DynamoDbClient ddb, String tableName) {
+            for (Map<String, AttributeValue> item : items) {
+                Map<String, Object> jsonItem = new HashMap<>();
+                for (Map.Entry<String, AttributeValue> entry : item.entrySet()) {
+                    jsonItem.put(entry.getKey(), entry.getValue().s());
+                }
+                jsonData.add(jsonItem);
+                System.out.println("jsonItem: "+objectMapper.writeValueAsString(jsonItem));
+            }
+
+            return objectMapper.writeValueAsString(jsonData);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+	
+	private static Map<Object, Object> toSimpleMap(Map<String, AttributeValue> item) {
+        // Convert DynamoDB item to a simple map with JSON-friendly values
+		System.out.println("inside toSimpleMap: "+item);
+        return item.entrySet().stream().collect(
+            Collectors.toMap(
+                Map.Entry::getKey,
+                entry -> {
+                    AttributeValue value = entry.getValue();
+                    if (value.s() != null) return value.s();
+                    if (value.n() != null) return Double.parseDouble(value.n());
+                    if (value.bool() != null) return value.bool();
+                    if (value.m()!=null) {
+                    	return toSimpleMap(value.m()); // recursion
+                    }
+                    if (value.l() != null) return value.l().stream().map(DynamoUtils::toSimpleValue).collect(Collectors.toList());
+
+                    // Add other attribute types as needed (e.g., B, SS, NS, BS)
+                    return null;
+                }
+            )
+        );
+    }
+    
+    private static Object toSimpleValue(AttributeValue value) {
+        if (value.s() != null) return value.s();
+        if (value.n() != null) return Double.parseDouble(value.n());
+        if (value.bool() != null) return value.bool();
+        if (value.m() != null) return toSimpleMap(value.m());
+        if (value.l() != null) return value.l().stream().map(DynamoUtils::toSimpleValue).collect(Collectors.toList());
+        // Add other attribute types as needed (e.g., B, SS, NS, BS)
+        return null;
+    }
+    
+	
+
+
+	public List<Map<String, AttributeValue>>  scanTable(DynamoDbClient ddb, String tableName) {
+		
 		try {
 			ScanRequest scanRequest = ScanRequest.builder().tableName(tableName).build();
 
 			ScanResponse response = ddb.scan(scanRequest);
 
 			List<Map<String, AttributeValue>> items = response.items();
-
+			
 			for (Map<String, AttributeValue> item : items) {
-				System.out.println("Item: " + item);
+				log.info("Item: " + item);
 
 				for (String key : item.keySet()) {
 					DynamoAttribute dynamoAttibute = splitIntoToDynamoAttribute(item.get(key));
-					System.out.println(key + "::  type: " + dynamoAttibute.type + " value:" + dynamoAttibute.value);
+					
+					log.info(key+ "::  type: " + dynamoAttibute.type + " value:" + dynamoAttibute.value);
 				}
-				System.out.println("-----");
-
+			
 			}
+
+//			String json = convertScanResponseToJson(response);
+//			System.out.println(json);
+			
+			
+			
+			ObjectMapper objectMapper = new ObjectMapper();
+		
+			items.forEach(item -> {
+                try {
+                    // Convert DynamoDB item to a JSON string
+                    String jsonString = objectMapper.writeValueAsString(toSimpleMap(item));
+                    System.out.println("dude:"+jsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+			return items;
 
 		} catch (DynamoDbException e) {
 			System.err.println("Unable to scan table: " + e.getMessage());
 			System.exit(1);
 		}
+		return null;
 	}
 
 }

@@ -73,11 +73,32 @@ public class APIController {
 	public String deleteDynamoTable(@RequestBody DynamoTableIdentitifer request) {
 		log.info("delete table: "+request.getTableName());
 
-		DynamoDbClient s3Client = DynamoDbClient.builder().region(region).build();
+		DynamoDbClient ddb = DynamoDbClient.builder().region(region).build();
 
 		DynamoUtils dynamoUtils = new DynamoUtils();
 		try {
-			dynamoUtils.deleteTable(s3Client, request.getTableName());
+			dynamoUtils.deleteTable(ddb, request.getTableName());
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return "SUCCESS";
+
+	}
+	
+	@PostMapping("/dynamo/addTable")
+	public String addNewTable(@RequestBody DynamoTableIdentitifer request) {
+		log.info("add table: "+request.getTableName());
+		log.info("key: "+request.getPrimaryKey());
+		log.info("key type: "+request.getPrimaryKeyType());
+		log.info("sort key: "+request.getSortKey());
+		log.info("sort key type: "+request.getSortKeyType());
+
+		DynamoDbClient ddb = DynamoDbClient.builder().region(region).build();
+
+		DynamoUtils dynamoUtils = new DynamoUtils();
+		try {
+			dynamoUtils.createTable(ddb, request.getTableName(), request.getPrimaryKey(), request.getPrimaryKeyType(), request.getSortKey(),
+					request.getSortKeyType());
 		} catch (Exception e) {
 			return e.getMessage();
 		}

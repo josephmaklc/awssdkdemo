@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:replace="~{fragments/layout :: headerFragment}">
+</head>
+<script>
+	$(document).ready(function() {
+
+	  $('#addButton').click(function() {
+	    console.log("on click");
+		var tableName = $("#tableName").val();
+		var primaryKey = $("#primaryKey").val();
+		var primaryKeyType = $('input[id="primaryKeyType"]:checked').val();
+		var sortKey = $("#sortKey").val();
+		var sortKeyType = $('input[id="sortKeyType"]:checked').val();
+		
+	    console.log("adding this tableName:" + tableName);
+		console.log("adding this primaryKey:" + primaryKey);
+		console.log("adding this primaryKeyType:" + primaryKeyType);
+		console.log("adding this sortKey:" + sortKey);
+		console.log("adding this sortKeyType:" + sortKeyType);
+		
+		$("#message").removeClass();
+
+		$.ajax({
+	      type: "POST",
+	      url: "/dynamo/addTable",
+	      data: JSON.stringify({
+	        tableName: tableName,
+			primaryKey: primaryKey,
+			primaryKeyType: primaryKeyType,
+			sortKey: sortKey,
+			sortKeyType: sortKeyType
+			
+	      }),
+	      contentType: "application/json",
+	      success: function(response) {
+	        console.log("response is:", response);
+			if (response == 'SUCCESS') {
+	          $("#message").addClass("alert alert-success");
+			  $("#message").text("Table added");
+	        } else {
+	          $("#message").addClass("alert alert-danger");
+			  $("#message").text(response);
+
+	        }
+	      },
+	      error: function(xhr, status, error) {
+			$("#message").addClass("alert alert-danger");
+			$("#message").text("An error occured");
+
+	        console.error("Error:", status, error);
+			
+
+	      }
+	    });
+
+	  });
+
+	}); //ready	  
+	  
+	</script>
+<body>
+
+
+<div class="container">
+	<nav aria-label="breadcrumb">
+		  <ol class="breadcrumb">
+		    <li class="breadcrumb-item"><a href="/">Home</a></li>
+			<li class="breadcrumb-item"><a href="/dynamo">Dynamo Tables</a></li>
+			<li class="breadcrumb-item active" aria-current="page">New Dynamo Table</li>
+		  </ol>
+		</nav>
+		
+<h1>Add New Dynamo Table</h1>
+
+Dynamo Table consists of a primary key and an optional sort key
+<p/>
+Table Name: <input type="text" id="tableName"/>
+<p/>
+Primary Key: <input type="text" id="primaryKey"/>
+<p/>
+Primary Key Type: 
+  <input type="radio" id="primaryKeyType" name="primaryKeyType" value="S">
+  <label for="String">String</label>
+  <input type="radio" id="primaryKeyType" name="primaryKeyType" value="N">
+  <label for="Number">Number</label>
+  <p/>    
+  
+Sort Key: <input type="text" id="sortKey"/>
+<p/>
+Sory Key Type: 
+<input type="radio" id="sortKeyType" name="sortKeyType" value="S">
+<label for="String">String</label>
+<input type="radio" id="sortKeyType" name="sortKeyType" value="N">
+<label for="Number">Number</label>
+<p/>    
+
+
+<p/>
+<div id="message" role="alert"></div>
+<p/>
+<button id="addButton" class="btn btn-primary">Add</button>
+<a href="javascript:history.back()" class="btn btn-secondary" role="button">Cancel</a>
+<p/>
+
+</div>
+
+</body>
+</html>

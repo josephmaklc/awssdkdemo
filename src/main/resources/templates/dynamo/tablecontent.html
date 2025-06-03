@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head th:replace="~{fragments/layout :: headerFragment}">
+	</head>
+<body>
+
+
+
+<div class="container">
+
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+		<li class="breadcrumb-item"><a href="/dynamo">Dynamo Tables</a></li>
+		<li class="breadcrumb-item"><a th:href="'/dynamo/describeTable?tableName='+${tableName}">Dynamo Table</a></li>
+		<li class="breadcrumb-item active" aria-current="page">Dynamo Table Content</li>
+
+		  </ol>
+	</nav>
+
+	
+<h1>Dynamo Table</h1>
+
+<div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+
+<div th:if="${items!=null}">
+	<div th:each="item : ${items}">
+		<div th:text="${item}"/>
+	<br/>
+	</div>
+</div>	
+<p/>
+
+<p/>
+
+</body>
+</html>

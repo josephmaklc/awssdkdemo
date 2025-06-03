@@ -1,5 +1,7 @@
 package com.optimal.solution.awssdkdemo.model;
 
+//This is for the Request json parameter for ajax call
+
 public class S3ItemIdentifier {
 	private String bucketName;
 	private String itemKey;

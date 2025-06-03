@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head th:include="fragments/layout :: headerFragment">
+	<head th:insert="fragments/layout :: headerFragment">
 	</head>
 <body>
 
@@ -56,6 +56,8 @@
 	</table>
 </div>	
 <p/>
+<a th:href="'/dynamo/scanTable?tableName='+${tableInfo.tableName()}" class="btn btn-primary" role="button">Scan Table</a>
+
 <p/>
 
 </body>
