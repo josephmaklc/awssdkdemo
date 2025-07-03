@@ -57,7 +57,10 @@
 </div>	
 <p/>
 <a th:href="'/dynamo/scanTable?tableName='+${tableInfo.tableName()}" class="btn btn-primary" role="button">Scan Table</a>
-
+&nbsp;&nbsp;
+<a th:href="'/dynamo/queryTable?tableName='+${tableInfo.tableName()}" class="btn btn-primary" role="button">Query Table</a>
+&nbsp;&nbsp;
+<a th:href="'/dynamo/addnewentry?tableName='+${tableInfo.tableName()}" class="btn btn-primary" role="button">Add New Item</a>
 <p/>
 
 </body>

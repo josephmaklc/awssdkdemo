@@ -19,8 +19,10 @@
 		console.log("adding this primaryKeyType:" + primaryKeyType);
 		console.log("adding this sortKey:" + sortKey);
 		console.log("adding this sortKeyType:" + sortKeyType);
-		
+
 		$("#message").removeClass();
+		$("#message").addClass("alert alert-info");
+		$("#message").text("Adding table...");
 
 		$.ajax({
 	      type: "POST",
@@ -76,12 +78,12 @@
 
 Dynamo Table consists of a primary key and an optional sort key
 <p/>
-Table Name: <input type="text" id="tableName"/>
+Table Name: <input type="text" id="tableName"/> <font color="red">*</font>
 <p/>
-Primary Key: <input type="text" id="primaryKey"/>
+Primary Key: <input type="text" id="primaryKey"/> <font color="red">*</font>
 <p/>
 Primary Key Type: 
-  <input type="radio" id="primaryKeyType" name="primaryKeyType" value="S">
+  <input type="radio" id="primaryKeyType" name="primaryKeyType" checked value="S">
   <label for="String">String</label>
   <input type="radio" id="primaryKeyType" name="primaryKeyType" value="N">
   <label for="Number">Number</label>
@@ -90,7 +92,7 @@ Primary Key Type:
 Sort Key: <input type="text" id="sortKey"/>
 <p/>
 Sory Key Type: 
-<input type="radio" id="sortKeyType" name="sortKeyType" value="S">
+<input type="radio" id="sortKeyType" name="sortKeyType" checked value="S">
 <label for="String">String</label>
 <input type="radio" id="sortKeyType" name="sortKeyType" value="N">
 <label for="Number">Number</label>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head th:replace="~{fragments/layout :: headerFragment}">
+	</head>
+<body>
+	<input type="hidden" id="tableName" th:value="${tableName}"/>
+
+	<script>
+		$(document).ready(function() {
+
+		  $('#addButton').click(function() {
+		    console.log("on click");
+			var tableName = $("#tableName").val();
+			var dynamojson = $("#dynamojson").val();
+
+			console.log("adding this tableName:" + tableName);
+			console.log("adding this dynamojson:" + dynamojson);
+
+			$("#message").removeClass();
+			$("#message").addClass("alert alert-info");
+			$("#message").text("Adding entry...");
+
+			$.ajax({
+		      type: "POST",
+		      url: "/dynamo/addEntry",
+		      data: JSON.stringify({
+		        tableName: tableName,
+				json: dynamojson,
+				
+		      }),
+		      contentType: "application/json",
+		      success: function(response) {
+		        console.log("response is:", response);
+				if (response == 'SUCCESS') {
+		          $("#message").addClass("alert alert-success");
+				  $("#message").text("Entry added");
+		        } else {
+		          $("#message").addClass("alert alert-danger");
+				  $("#message").text(response);
+
+		        }
+		      },
+		      error: function(xhr, status, error) {
+				$("#message").addClass("alert alert-danger");
+				$("#message").text("An error occured");
+
+		        console.error("Error:", status, error);
+				
+
+		      }
+
+		  });
+		}); //ready	  
+		 }); 
+		</script>
+<div class="container">
+
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+		<li class="breadcrumb-item"><a href="/dynamo">Dynamo Tables</a></li>
+		<li class="breadcrumb-item"><a th:href="'/dynamo/describeTable?tableName='+${tableName}">Dynamo Table</a></li>
+		<li class="breadcrumb-item active" aria-current="page">Add New Entry</li>
+
+		  </ol>
+	</nav>
+
+	
+<h1>Dynamo Table</h1>
+
+
+<table class="table">
+	<tr><td><b>Table</b></td><td th:text="${tableName}"/></tr>
+
+			<tr th:each="attribute : ${tableInfo.attributeDefinitions}">
+		<td width="20%"><b th:text="${attribute.attributeName()}"/></td>
+		<td th:text="${attribute.attributeType()}"/>
+	</tr>
+	</table>
+<p/>
+<div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+Enter <a href="https://awsfundamentals.com/blog/aws-dynamodb-data-types">DynamoDB Json</a><br/>
+
+Example: <pre>
+{
+	<div th:remove="tag" th:each="attribute,status : ${tableInfo.attributeDefinitions}">
+	"<div th:remove="tag" th:text="${attribute.attributeName()}"/>" : {
+		"<div th:remove="tag" th:text="${attribute.attributeType()}"/>":"<div th:remove="tag" th:text='${attribute.attributeType().toString()=="N"?"123":"some text"}'/>"
+	}<div th:remove="tag" th:unless="${status.last}">,</div>
+	</div>
+}
+	</pre>
+
+	 
+<textarea id="dynamojson" rows="15" cols="60">
+</textarea>
+
+<p/>
+<div id="message" role="alert"></div>
+<p/>
+
+<button id="addButton" class="btn btn-primary">Add</button>
+
+</body>
+</html>

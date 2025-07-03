@@ -19,11 +19,14 @@
 	</nav>
 
 	
-<h1>Dynamo Table</h1>
+<h1>Scan Dynamo Table</h1>
 
+<b>Table</b>: <div th:remove="tag" th:text="${tableName}"/>
+<p/>
 <div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
 
-
+<p th:if="${#lists.size(items)==0}"><i>There are no items in this table</i></p>
+	
 <div th:if="${items!=null}">
 	<div th:each="item : ${items}">
 		<div th:text="${item}"/>
@@ -31,6 +34,7 @@
 	</div>
 </div>	
 <p/>
+<a th:href="'/dynamo/addnewentry?tableName='+${tableName}" class="btn btn-primary" role="button">Add New Item</a>
 
 <p/>
 

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head th:insert="fragments/layout :: headerFragment">
+	</head>
+<body>
+
+
+	<input type="hidden" id="tableName" th:value="${tableInfo.tableName()}"/>
+
+	<script>
+		$(document).ready(function() {
+
+		  $('#addButton').click(function() {
+		    console.log("on click");
+			var tableName = $("#tableName").val();
+
+			console.log("querying this tableName:" + tableName);
+
+			$("#message").removeClass();
+			$("#message").addClass("alert alert-info");
+			let name1=$("#name1").val();
+			let name2=$("#name2").val();
+			let type1=$("#type1").val();
+			let value1=$("#value1").val();
+			let type2=$("#type2").val();
+			let value2=$("#value2").val();
+			console.log("type1="+type1+" value1="+value1);
+			console.log("type2="+type2+" value2="+value2);
+			$('#result').text("") // clear previous result
+			$.ajax({
+		      type: "POST",
+		      url: "/dynamo/query",
+		      data: JSON.stringify({
+		        tableName: tableName,
+				primaryKeyName: name1,
+				primaryKeyType: type1,
+				primaryKeyValue: value1,
+				sortKeyName: name2,
+				sortKeyType: type2,
+				sortKeyValue: value2,
+				
+		      }),
+		      contentType: "application/json",
+		      success: function(response) {
+		        console.log("response is:", response);
+				if (response.length==0) {
+					$("#message").addClass("alert alert-danger");
+					$("#message").text("Not found")
+				}
+				else {
+					$("#message").addClass("alert alert-info");
+					$("#message").text(response.length+" Item"+(response.length==1?"":"s")+" found")
+
+				}
+				$.each(response, function(index, item) {
+					$('#result').append("<p>"+item+"</p>");
+				 });
+		      },
+		      error: function(xhr, status, error) {
+				$("#message").addClass("alert alert-danger");
+				$("#message").text("An error occured");
+
+		        console.error("Error:", status, error);
+				
+
+		      }
+
+		  });
+		}); //ready	  
+		
+		 }); 
+		</script>
+		
+<div class="container">
+
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+		<li class="breadcrumb-item"><a href="/dynamo">Dynamo Tables</a></li>
+		<li class="breadcrumb-item active" aria-current="page">Dynamo Table</li>
+	  </ol>
+	</nav>
+
+	
+<h1>Query Dynamo Table</h1>
+
+<div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+<table class="table" th:if="${tableInfo!=null}">
+  <tbody>
+    <tr>
+      <td width="20%"><b>Table Name</b></td>
+      <td th:text="${tableInfo.tableName()}"/>
+    </tr>
+	 </tbody>
+</table>	
+
+<div th:if="${tableInfo!=null}">
+<h2>Attributes</h2>
+<table class="table">
+			<tr th:each="attribute, status : ${tableInfo.attributeDefinitions}">
+		<td width="20%"><b th:text="${attribute.attributeName()}"/></td>
+		<td th:text="${attribute.attributeType()}"/>
+		<td>
+			<input type="hidden" th:id="'name'+${status.index+1}" th:value="${attribute.attributeName()}"/>
+			<input type="hidden" th:id="'type'+${status.index+1}" th:value="${attribute.attributeType()}"/>
+			<input type="text" th:id="'value'+${status.index+1}">
+	</tr>
+	</table>
+</div>
+<p/>
+<div id="message" role="alert"></div>
+<p/>
+<div id="result">
+</div>
+<button id="addButton" class="btn btn-primary">Query</button>	
+<p/>
+<p/>
+
+</body>
+</html>

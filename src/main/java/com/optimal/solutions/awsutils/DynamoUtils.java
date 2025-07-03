@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,6 @@ import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter;
 
-
 public class DynamoUtils {
 //https://aws.amazon.com/blogs/database/choosing-the-right-dynamodb-partition-key/
 
@@ -62,17 +62,18 @@ public class DynamoUtils {
 					ListTablesRequest request = ListTablesRequest.builder().build();
 					response = ddb.listTables(request);
 				} else {
-					ListTablesRequest request = ListTablesRequest.builder().exclusiveStartTableName(lastTableName).build();
+					ListTablesRequest request = ListTablesRequest.builder().exclusiveStartTableName(lastTableName)
+							.build();
 					response = ddb.listTables(request);
 				}
 
 				List<String> tableNames = response.tableNames();
 				if (tableNames.size() > 0) {
 					result.addAll(tableNames);
-					//for (String tableName : tableNames) {
-						//System.out.println(tableName);
-						//describeDymamoDBTable(ddb, tableName);
-					//}
+					// for (String tableName : tableNames) {
+					// System.out.println(tableName);
+					// describeDymamoDBTable(ddb, tableName);
+					// }
 				} else {
 					log.info("No dynamoDB tables found!");
 					return result;
@@ -84,7 +85,7 @@ public class DynamoUtils {
 				}
 
 			} catch (DynamoDbException e) {
-				log.error("Error listing dynamo tables",e);
+				log.error("Error listing dynamo tables", e);
 				throw e;
 			}
 		}
@@ -130,8 +131,7 @@ public class DynamoUtils {
 			}
 
 		} catch (DynamoDbException e) {
-			System.err.println(e.getMessage());
-			System.exit(1);
+			log.error(e.getMessage());
 		}
 	}
 
@@ -229,30 +229,52 @@ public class DynamoUtils {
 
 	}
 
-	public int queryItemCompositeKey(DynamoDbClient ddb, String tableName, String partitionKeyName,
-			String partitionKeyValue, String sortKeyName, String sortKeyValue) {
+	public List<Map<String, AttributeValue>> queryItemCompositeKey(DynamoDbClient ddb, String tableName,
+			String partitionKeyName, String partitionKeyType, String partitionKeyValue, String sortKeyName,
+			String sortKeyType, String sortKeyValue) {
 
+		// See
 		// https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html
 		Map<String, AttributeValue> expressionValues = new HashMap<>();
-		expressionValues.put(":pkVal", AttributeValue.builder().n(partitionKeyValue).build());
-		expressionValues.put(":skVal", AttributeValue.builder().s(sortKeyValue).build());
 
+		AttributeValue attributeValuePK = null;
+		if ("N".equals(partitionKeyType))
+			attributeValuePK = AttributeValue.builder().n(partitionKeyValue).build();
+		if ("S".equals(partitionKeyType))
+			attributeValuePK = AttributeValue.builder().s(partitionKeyValue).build();
+
+		expressionValues.put(":pkVal", attributeValuePK);
 		Map<String, String> expressionAttributeNames = new HashMap<>();
 		expressionAttributeNames.put("#pk", partitionKeyName);
-		expressionAttributeNames.put("#sk", sortKeyName);
+		String keyConditionExpression = "#pk = :pkVal";
+		
+		if (!Strings.isBlank(sortKeyValue)) {
+			AttributeValue attributeValueSK = null;
+			if ("N".equals(sortKeyType))
+				attributeValueSK = AttributeValue.builder().n(sortKeyValue).build();
+			if ("S".equals(sortKeyType))
+				attributeValueSK = AttributeValue.builder().s(sortKeyValue).build();
+			expressionValues.put(":skVal", attributeValueSK);
+			expressionAttributeNames.put("#sk", sortKeyName);
+			// condition can have more elaborate syntax, see the reference link above.
+			keyConditionExpression = "#pk = :pkVal AND #sk = :skVal";
+		}
 
 		QueryRequest queryRequest = QueryRequest.builder().tableName(tableName)
 //		    .keyConditionExpression("product id=1000 AND product type='Book ID'")
-				.keyConditionExpression("#pk = :pkVal AND #sk = :skVal").expressionAttributeValues(expressionValues)
+				.keyConditionExpression(keyConditionExpression).expressionAttributeValues(expressionValues)
 				.expressionAttributeNames(expressionAttributeNames).build();
 
 		try {
 			QueryResponse response = ddb.query(queryRequest);
 
 			if (response.hasItems()) {
+
 				response.items().forEach(item -> {
-					System.out.println("Item: " + item);
+					log.info("Item found: " + item);
 				});
+
+				return response.items();
 			} else {
 				System.out.println("No items found matching the query.");
 			}
@@ -260,31 +282,9 @@ public class DynamoUtils {
 		} catch (Exception e) {
 			System.err.println("Error querying DynamoDB: " + e.getMessage());
 		}
-		return 0;
+		return null;
 	}
 
-	// System.out.format("QueryTable for %s=%s in table %s:\n", partitionKeyName,
-	// partitionKeyVal, tableName);
-	/*
-	 * HashMap<String, String> attrNameAlias = new HashMap<String, String>();
-	 * attrNameAlias.put(partitionAlias, partitionKeyName);
-	 * 
-	 * // Set up mapping of the partition name with the value. HashMap<String,
-	 * AttributeValue> attrValues = new HashMap<>(); attrValues.put(":" +
-	 * partitionKeyName, AttributeValue.builder() .n(partitionKeyVal) .build());
-	 * 
-	 * System.out.println(attrValues); QueryRequest queryReq =
-	 * QueryRequest.builder() .tableName(tableName)
-	 * .keyConditionExpression(partitionAlias + " = :" + partitionKeyName)
-	 * .expressionAttributeNames(attrNameAlias)
-	 * .expressionAttributeValues(attrValues) .build();
-	 * 
-	 * try { QueryResponse response = ddb.query(queryReq); return response.count();
-	 * 
-	 * } catch (DynamoDbException e) { System.err.println(e.getMessage());
-	 * System.exit(1); } return -1;
-	 */
-	// }
 	public void putItemInTable(DynamoDbClient ddb, String tableName, HashMap<String, AttributeValue> itemValues) {
 
 		PutItemRequest request = PutItemRequest.builder().tableName(tableName).item(itemValues).build();
@@ -344,50 +344,52 @@ public class DynamoUtils {
 			System.exit(1);
 		}
 	}
-	
-	public void putJSONItemInTable(DynamoDbClient ddb, String tableName, String jsonData) {
-		 try {
-	            Map<String, AttributeValue> item = DynamoDBJsonParser.parseJsonToAttributeValue(jsonData);
-	            System.out.println(item);
-	            
-	            HashMap<String, AttributeValue> itemValues = new HashMap<>();
-	            
-	            item.forEach((key, value) -> {
-	                System.out.println("Key: " + key + ", Value: " + value);
-	                itemValues.put(key, value);
-	            });
-	            
-	            PutItemRequest request = PutItemRequest.builder().tableName(tableName).item(itemValues).build();
 
-	    		try {
-	    			PutItemResponse response = ddb.putItem(request);
-	    			System.out.println(tableName + " was successfully updated. The request id is "
-	    					+ response.responseMetadata().requestId());
+	public void putJSONItemInTable(DynamoDbClient ddb, String tableName, String jsonData) throws Exception {
+		try {
+			Map<String, AttributeValue> item = DynamoDBJsonParser.parseJsonToAttributeValue(jsonData);
+			System.out.println(item);
 
-	    		} catch (ResourceNotFoundException e) {
-	    			System.err.format("Error: The Amazon DynamoDB table \"%s\" can't be found.\n", tableName);
-	    			System.err.println("Be sure that it exists and that you've typed its name correctly!");
-	    			System.exit(1);
-	    		} catch (DynamoDbException e) {
-	    			System.err.println(e.getMessage());
-	    			System.exit(1);
-	    		}
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	        }	
+			HashMap<String, AttributeValue> itemValues = new HashMap<>();
+
+			item.forEach((key, value) -> {
+				System.out.println("Key: " + key + ", Value: " + value);
+				itemValues.put(key, value);
+			});
+
+			PutItemRequest request = PutItemRequest.builder().tableName(tableName).item(itemValues).build();
+
+			try {
+				PutItemResponse response = ddb.putItem(request);
+				log.info(tableName + " was successfully updated. The request id is "
+						+ response.responseMetadata().requestId());
+
+			} catch (ResourceNotFoundException e) {
+				log.error("putJSONItemInTable Error: The Amazon DynamoDB table \"%s\" can't be found.\n", tableName);
+				throw e;
+
+			} catch (DynamoDbException e) {
+				log.error("DynamoDb Exception in putJSONItemInTable" + e.getMessage());
+				throw e;
+
+			}
+		} catch (Exception e) {
+			log.error("Exception in putJSONItemInTable:" + e.getMessage());
+			throw e;
+		}
 	}
 
-
-	public void createTable(DynamoDbClient ddb, String tableName, String key, String keyType, String sortKey, String sortKeyType) throws Exception{
+	public void createTable(DynamoDbClient ddb, String tableName, String key, String keyType, String sortKey,
+			String sortKeyType) throws Exception {
 		if (sortKey.isEmpty()) {
-			createTablePrimaryKeyOnly(ddb,tableName,key,keyType);
-		}
-		else {
+			createTablePrimaryKeyOnly(ddb, tableName, key, keyType);
+		} else {
 			createTableCompositeKey(ddb, tableName, key, keyType, sortKey, sortKeyType);
 		}
 	}
-	
-	public void createTablePrimaryKeyOnly(DynamoDbClient ddb, String tableName, String key, String keyType) throws Exception{
+
+	public void createTablePrimaryKeyOnly(DynamoDbClient ddb, String tableName, String key, String keyType)
+			throws Exception {
 
 		log.info("creating Dynamno DB table: " + tableName + " key: " + key + " keyType: " + keyType);
 		DynamoDbWaiter dbWaiter = ddb.waiter();
@@ -409,7 +411,7 @@ public class DynamoUtils {
 			System.out.println("Table created: " + newTable);
 
 		} catch (DynamoDbException e) {
-			log.error("Error creating table: ",e);
+			log.error("Error creating table: ", e);
 			throw e;
 		}
 	}
@@ -439,7 +441,7 @@ public class DynamoUtils {
 		}
 	}
 
-	public void deleteTable(DynamoDbClient ddb, String tableName) {
+	public void deleteTable(DynamoDbClient ddb, String tableName) throws Exception {
 		log.info("Deleting table: " + tableName);
 		DeleteTableRequest request = DeleteTableRequest.builder().tableName(tableName).build();
 
@@ -448,6 +450,7 @@ public class DynamoUtils {
 			log.info(tableName + " was successfully deleted!");
 		} catch (DynamoDbException e) {
 			log.error(e.getMessage());
+			throw e;
 		}
 	}
 
@@ -461,10 +464,10 @@ public class DynamoUtils {
 			builder.n(value);
 			break;
 		default:
-			System.out.println("Not able to handle this type of attribute yet:"+type);
+			System.out.println("Not able to handle this type of attribute yet:" + type);
 			builder.s(value);
 		}
-		
+
 		return builder.build();
 	}
 
@@ -476,15 +479,16 @@ public class DynamoUtils {
 
 		try {
 			ddb.deleteItem(deleteReq);
-			System.out.println("table: " + tableName + " key: [" + key + "] val: ["+keyVal+"] was successfully deleted!");
+			System.out.println(
+					"table: " + tableName + " key: [" + key + "] val: [" + keyVal + "] was successfully deleted!");
 
 		} catch (DynamoDbException e) {
 			System.err.println(e.getMessage());
 			System.exit(1);
 		}
 	}
-	public void deleteItemCompositeKey(DynamoDbClient ddb, String tableName, 
-			String key, String keyType, String keyVal,
+
+	public void deleteItemCompositeKey(DynamoDbClient ddb, String tableName, String key, String keyType, String keyVal,
 			String sortKey, String sortKeyTYpe, String sortKeyVal) {
 		HashMap<String, AttributeValue> keyToGet = new HashMap<>();
 		keyToGet.put(key, buildAttributeValue(keyType, keyVal));
@@ -494,7 +498,8 @@ public class DynamoUtils {
 
 		try {
 			ddb.deleteItem(deleteReq);
-			System.out.println("table: " + tableName + " key: [" + key + "] val: ["+keyVal+"] sortKey: ["+sortKey+"] sortKeyVal: ["+sortKeyVal+"] was successfully deleted!");
+			System.out.println("table: " + tableName + " key: [" + key + "] val: [" + keyVal + "] sortKey: [" + sortKey
+					+ "] sortKeyVal: [" + sortKeyVal + "] was successfully deleted!");
 
 		} catch (DynamoDbException e) {
 			System.err.println(e.getMessage());
@@ -502,40 +507,30 @@ public class DynamoUtils {
 		}
 	}
 
-	public void updateTableItem(DynamoDbClient ddb,
-            String tableName,
-            String key,
-            String keyType,
-            String keyVal,
-            String fieldName,
-            String fieldType,
-            String updateVal) {
+	public void updateTableItem(DynamoDbClient ddb, String tableName, String key, String keyType, String keyVal,
+			String fieldName, String fieldType, String updateVal) {
 
-		System.out.println("Updating Table "+tableName+" key: "+key+" value: "+keyVal+" updateVal: "+updateVal);
-        HashMap<String, AttributeValue> itemKey = new HashMap<>();
-        itemKey.put(key, buildAttributeValue(keyType, keyVal));
+		System.out.println(
+				"Updating Table " + tableName + " key: " + key + " value: " + keyVal + " updateVal: " + updateVal);
+		HashMap<String, AttributeValue> itemKey = new HashMap<>();
+		itemKey.put(key, buildAttributeValue(keyType, keyVal));
 
-        HashMap<String, AttributeValueUpdate> updatedValues = new HashMap<>();
-        updatedValues.put(fieldName, AttributeValueUpdate.builder()
-                .value( buildAttributeValue(fieldType, updateVal))
-                .action(AttributeAction.PUT)
-                .build());
+		HashMap<String, AttributeValueUpdate> updatedValues = new HashMap<>();
+		updatedValues.put(fieldName, AttributeValueUpdate.builder().value(buildAttributeValue(fieldType, updateVal))
+				.action(AttributeAction.PUT).build());
 
-        UpdateItemRequest request = UpdateItemRequest.builder()
-                .tableName(tableName)
-                .key(itemKey)
-                .attributeUpdates(updatedValues)
-                .build();
+		UpdateItemRequest request = UpdateItemRequest.builder().tableName(tableName).key(itemKey)
+				.attributeUpdates(updatedValues).build();
 
-        try {
-            UpdateItemResponse response = ddb.updateItem(request);
-            System.out.println(response);
-            System.out.println("Table "+tableName+" was updated");
-        } catch (DynamoDbException e) {
-            System.err.println(e.getMessage());
-        }
-    }
-	
+		try {
+			UpdateItemResponse response = ddb.updateItem(request);
+			System.out.println(response);
+			System.out.println("Table " + tableName + " was updated");
+		} catch (DynamoDbException e) {
+			System.err.println(e.getMessage());
+		}
+	}
+
 	DynamoAttribute splitIntoToDynamoAttribute(AttributeValue attributeValue) {
 		String type = "Unknown";
 		Object value = null;
@@ -548,7 +543,7 @@ public class DynamoUtils {
 		} else if (attributeValue.bool() != null) {
 			type = "Boolean";
 			value = attributeValue.bool();
-		}else if (attributeValue.m() != null) {
+		} else if (attributeValue.m() != null) {
 			type = "Map";
 			value = attributeValue.m();
 		} else if (attributeValue.l() != null) {
@@ -577,106 +572,104 @@ public class DynamoUtils {
 		return result;
 
 	}
-	
+
 	public static String convertScanResponseToJson(ScanResponse scanResponse) {
-        try {
-            List<Map<String, AttributeValue>> items = scanResponse.items();
-            List<Map<String, Object>> jsonData = new ArrayList<>();
-            ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			List<Map<String, AttributeValue>> items = scanResponse.items();
+			List<Map<String, Object>> jsonData = new ArrayList<>();
+			ObjectMapper objectMapper = new ObjectMapper();
 
-            for (Map<String, AttributeValue> item : items) {
-                Map<String, Object> jsonItem = new HashMap<>();
-                for (Map.Entry<String, AttributeValue> entry : item.entrySet()) {
-                    jsonItem.put(entry.getKey(), entry.getValue().s());
-                }
-                jsonData.add(jsonItem);
-                System.out.println("jsonItem: "+objectMapper.writeValueAsString(jsonItem));
-            }
+			for (Map<String, AttributeValue> item : items) {
+				Map<String, Object> jsonItem = new HashMap<>();
+				for (Map.Entry<String, AttributeValue> entry : item.entrySet()) {
+					jsonItem.put(entry.getKey(), entry.getValue().s());
+				}
+				jsonData.add(jsonItem);
+				System.out.println("jsonItem: " + objectMapper.writeValueAsString(jsonItem));
+			}
 
-            return objectMapper.writeValueAsString(jsonData);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-	
+			return objectMapper.writeValueAsString(jsonData);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	private static Map<Object, Object> toSimpleMap(Map<String, AttributeValue> item) {
-        // Convert DynamoDB item to a simple map with JSON-friendly values
-		System.out.println("inside toSimpleMap: "+item);
-        return item.entrySet().stream().collect(
-            Collectors.toMap(
-                Map.Entry::getKey,
-                entry -> {
-                    AttributeValue value = entry.getValue();
-                    if (value.s() != null) return value.s();
-                    if (value.n() != null) return Double.parseDouble(value.n());
-                    if (value.bool() != null) return value.bool();
-                    if (value.m()!=null) {
-                    	return toSimpleMap(value.m()); // recursion
-                    }
-                    if (value.l() != null) return value.l().stream().map(DynamoUtils::toSimpleValue).collect(Collectors.toList());
+		// Convert DynamoDB item to a simple map with JSON-friendly values
+		System.out.println("inside toSimpleMap: " + item);
+		return item.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> {
+			AttributeValue value = entry.getValue();
+			if (value.s() != null)
+				return value.s();
+			if (value.n() != null)
+				return Double.parseDouble(value.n());
+			if (value.bool() != null)
+				return value.bool();
+			if (value.m() != null) {
+				return toSimpleMap(value.m()); // recursion
+			}
+			if (value.l() != null)
+				return value.l().stream().map(DynamoUtils::toSimpleValue).collect(Collectors.toList());
 
-                    // Add other attribute types as needed (e.g., B, SS, NS, BS)
-                    return null;
-                }
-            )
-        );
-    }
-    
-    private static Object toSimpleValue(AttributeValue value) {
-        if (value.s() != null) return value.s();
-        if (value.n() != null) return Double.parseDouble(value.n());
-        if (value.bool() != null) return value.bool();
-        if (value.m() != null) return toSimpleMap(value.m());
-        if (value.l() != null) return value.l().stream().map(DynamoUtils::toSimpleValue).collect(Collectors.toList());
-        // Add other attribute types as needed (e.g., B, SS, NS, BS)
-        return null;
-    }
-    
-	
+			// Add other attribute types as needed (e.g., B, SS, NS, BS)
+			return null;
+		}));
+	}
 
+	private static Object toSimpleValue(AttributeValue value) {
+		if (value.s() != null)
+			return value.s();
+		if (value.n() != null)
+			return Double.parseDouble(value.n());
+		if (value.bool() != null)
+			return value.bool();
+		if (value.m() != null)
+			return toSimpleMap(value.m());
+		if (value.l() != null)
+			return value.l().stream().map(DynamoUtils::toSimpleValue).collect(Collectors.toList());
+		// Add other attribute types as needed (e.g., B, SS, NS, BS)
+		return null;
+	}
 
-	public List<Map<String, AttributeValue>>  scanTable(DynamoDbClient ddb, String tableName) {
-		
+	public List<Map<String, AttributeValue>> scanTable(DynamoDbClient ddb, String tableName) {
+
 		try {
 			ScanRequest scanRequest = ScanRequest.builder().tableName(tableName).build();
 
 			ScanResponse response = ddb.scan(scanRequest);
 
 			List<Map<String, AttributeValue>> items = response.items();
-			
+
 			for (Map<String, AttributeValue> item : items) {
 				log.info("Item: " + item);
 
 				for (String key : item.keySet()) {
 					DynamoAttribute dynamoAttibute = splitIntoToDynamoAttribute(item.get(key));
-					
-					log.info(key+ "::  type: " + dynamoAttibute.type + " value:" + dynamoAttibute.value);
+
+					log.info(key + "::  type: " + dynamoAttibute.type + " value:" + dynamoAttibute.value);
 				}
-			
+
 			}
 
 //			String json = convertScanResponseToJson(response);
 //			System.out.println(json);
-			
-			
-			
+
 			ObjectMapper objectMapper = new ObjectMapper();
-		
+
 			items.forEach(item -> {
-                try {
-                    // Convert DynamoDB item to a JSON string
-                    String jsonString = objectMapper.writeValueAsString(toSimpleMap(item));
-                    System.out.println("dude:"+jsonString);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+				try {
+					// Convert DynamoDB item to a JSON string
+					String jsonString = objectMapper.writeValueAsString(toSimpleMap(item));
+					System.out.println("jsonString:" + jsonString);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			});
 			return items;
 
 		} catch (DynamoDbException e) {
-			System.err.println("Unable to scan table: " + e.getMessage());
-			System.exit(1);
+			log.error("Unable to scan table: " + e.getMessage());
 		}
 		return null;
 	}

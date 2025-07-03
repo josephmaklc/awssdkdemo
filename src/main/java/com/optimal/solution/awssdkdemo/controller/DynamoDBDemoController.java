@@ -1,7 +1,6 @@
 package com.optimal.solution.awssdkdemo.controller;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.optimal.solution.awssdkdemo.Constants;
-import com.optimal.solutions.awsutils.DynamoAttribute;
 import com.optimal.solutions.awsutils.DynamoUtils;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -79,11 +77,61 @@ public class DynamoDBDemoController {
 		return result;
 	}
 	
+	@GetMapping("/dynamo/queryTable")
+	public ModelAndView queryTable(@RequestParam String tableName) {
+
+		DynamoDbClient dynamoDbClient = DynamoDbClient.builder().region(Constants.REGION).build();
+
+		DynamoUtils dynamoUtils = new DynamoUtils();
+		
+		TableDescription tableInfo = null;
+		String error=null;
+		try {
+			tableInfo = dynamoUtils.describeDymamoDBTable(dynamoDbClient, tableName);
+		} catch (Exception e) {
+			error = e.getMessage();
+			log.error("Cannot get table description",e);
+		}
+
+		dynamoDbClient.close();
+		
+		ModelAndView result = new ModelAndView();
+		result.setViewName("dynamo/querytable");
+		result.addObject("tableInfo", tableInfo);
+		result.addObject("error", error);
+		return result;
+	}
+	
 	@GetMapping("/dynamo/addnewtable")
 	public ModelAndView addnewtable() {
 
 		ModelAndView result = new ModelAndView();
 		result.setViewName("dynamo/newtable");
+
+		return result;
+	}
+	
+	@GetMapping("/dynamo/addnewentry")
+	public ModelAndView addnewentry(@RequestParam String tableName) {
+
+		DynamoDbClient dynamoDbClient = DynamoDbClient.builder().region(Constants.REGION).build();
+		DynamoUtils dynamoUtils = new DynamoUtils();
+		TableDescription tableInfo = null;
+		String error=null;
+		try {
+			tableInfo = dynamoUtils.describeDymamoDBTable(dynamoDbClient, tableName);
+		} catch (Exception e) {
+			error = e.getMessage();
+			log.error("Cannot get table description",e);
+		}
+		dynamoDbClient.close();
+		
+		ModelAndView result = new ModelAndView();
+		result.setViewName("dynamo/newentry");
+		result.addObject("tableName",tableName);
+		result.addObject("tableInfo",tableInfo);
+		result.addObject("error",error);
+		
 		return result;
 	}
 }
