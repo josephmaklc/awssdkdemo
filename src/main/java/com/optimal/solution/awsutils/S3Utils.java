@@ -1,4 +1,4 @@
-package com.optimal.solutions.awsutils;
+package com.optimal.solution.awsutils;
 
 import java.io.File;
 import java.io.FileOutputStream;
