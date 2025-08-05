@@ -10,12 +10,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.optimal.solution.awssdkdemo.Constants;
 import com.optimal.solution.awssdkdemo.model.DynamoDbJson;
 import com.optimal.solution.awssdkdemo.model.DynamoDbSearchParam;
 import com.optimal.solution.awssdkdemo.model.DynamoTableIdentitifer;
 import com.optimal.solution.awssdkdemo.model.S3ItemIdentifier;
-import com.optimal.solutions.awsutils.DynamoUtils;
-import com.optimal.solutions.awsutils.S3Utils;
+import com.optimal.solution.awsutils.DynamoUtils;
+import com.optimal.solution.awsutils.S3Utils;
 
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -27,7 +28,7 @@ public class APIController {
 
 	Logger log = LoggerFactory.getLogger(S3DemoController.class);
 
-	Region region = Region.US_EAST_1;
+	Region region = Constants.REGION;
 
 	@PostMapping("/s3/deleteItem")
 	public String deleteS3Item(@RequestBody S3ItemIdentifier request) {

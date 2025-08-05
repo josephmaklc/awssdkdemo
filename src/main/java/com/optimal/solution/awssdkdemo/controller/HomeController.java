@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.optimal.solution.awssdkdemo.Constants;
-import com.optimal.solutions.awsutils.DynamoUtils;
-import com.optimal.solutions.awsutils.S3Utils;
+import com.optimal.solution.awsutils.DynamoUtils;
+import com.optimal.solution.awsutils.S3Utils;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.s3.S3Client;

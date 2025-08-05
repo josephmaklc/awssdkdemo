@@ -1,4 +1,4 @@
-package com.optimal.solutions.awsutils;
+package com.optimal.solution.awsutils;
 
 import java.util.ArrayList;
 import java.util.HashMap;

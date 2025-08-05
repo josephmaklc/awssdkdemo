@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.optimal.solution.awssdkdemo.Constants;
-import com.optimal.solutions.awsutils.S3Utils;
+import com.optimal.solution.awsutils.S3Utils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

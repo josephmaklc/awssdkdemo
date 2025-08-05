@@ -1,4 +1,4 @@
-package com.optimal.solutions.awsutils;
+package com.optimal.solution.awsutils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -346,6 +346,7 @@ public class DynamoUtils {
 	}
 
 	public void putJSONItemInTable(DynamoDbClient ddb, String tableName, String jsonData) throws Exception {
+		System.out.println("putJSONItemInTable: "+tableName);
 		try {
 			Map<String, AttributeValue> item = DynamoDBJsonParser.parseJsonToAttributeValue(jsonData);
 			System.out.println(item);
@@ -365,7 +366,7 @@ public class DynamoUtils {
 						+ response.responseMetadata().requestId());
 
 			} catch (ResourceNotFoundException e) {
-				log.error("putJSONItemInTable Error: The Amazon DynamoDB table \"%s\" can't be found.\n", tableName);
+				log.error("putJSONItemInTable Error: The Amazon DynamoDB table "+tableName+" can't be found.\n");
 				throw e;
 
 			} catch (DynamoDbException e) {
