@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head th:include="fragments/layout :: headerFragment">
+<head th:insert="~{fragments/layout :: headerFragment}"></div>
 </head>
 <body>
 
@@ -16,7 +16,8 @@
 	</nav>
 
 <h1>Lambda Functions</h1>
-
+AWS Lambda is a serverless compute service that runs your code in response to events and automatically manages the underlying compute resources for you.
+You can add functions (in Python, Node, java, etc) via the AWS Console, or use the AWS <a href="https://docs.aws.amazon.com/cli/latest/reference/lambda/">CLI</a>, or the <a href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-cdk-tutorial.html">Cloud Development Kit</a>
 <p/>
 
 <script>
@@ -57,7 +58,7 @@
 	 <div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
 	 <div id="messageDelete" role="alert"></div>
 		
-<table class="table table-bordered">
+	 <table class="table table-bordered" th:if="${not #lists.isEmpty(functions)}" >
   <thead class="table-dark">
       <tr>
          <td with="95%">Name</td>
@@ -74,7 +75,7 @@
 	</td>
 	
 </table>
-<div th:insert="fragments/deletedialog"/>
+<div th:insert="~{fragments/deletedialog}"/>
 
 </div>
 

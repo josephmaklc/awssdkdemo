@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head th:include="fragments/layout :: headerFragment">
+<head th:insert="~{fragments/layout :: headerFragment}"></div>
 </head>
 <body>
 
@@ -45,8 +45,8 @@ S3 buckets are essentially digital "folders" where you store data in the form of
 
 	 <div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
 		
-<table class="table table-bordered">
-  <thead class="table-dark">
+	 <table class="table table-bordered" th:if="${not #lists.isEmpty(buckets)}">
+	 <thead class="table-dark">
       <tr>
          <td with="95%">Name</td>
          <td width="5%">&nbsp;</td>
@@ -62,7 +62,7 @@ S3 buckets are essentially digital "folders" where you store data in the form of
 	</td>
 	
 </table>
-<div th:insert="fragments/deletedialog"/>
+<div th:insert="~{fragments/deletedialog}"/>
 <a href="/s3/addnewbucket" class="btn btn-primary" role="button">Add</a>
 
 </div>

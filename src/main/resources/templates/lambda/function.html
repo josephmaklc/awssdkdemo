@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head th:include="fragments/layout :: headerFragment">
+	<head th:insert="~{fragments/layout :: headerFragment}"></div>
 	</head>
 <body>
 
@@ -80,8 +80,12 @@
 	  <td th:text="${config.memorySize()}+' MB'"/>
 	</tr>
 	<tr>
+		  <td><b>Handler</b></td>
+		  <td th:text="${config.handler()}"/>
+		</tr>
+	<tr>
 	  <td><b>Timeout</b></td>
-	  <td th:text="${config.timeout()}"/>
+	  <td th:text="${config.timeout()}+' sec'"/>
 	</tr>
 	<tr>
 	  <td><b>IAM Role ARN</b></td>
@@ -90,7 +94,7 @@
 	  </tbody>
 </table>	
 <p/>
-<b>Payload</b>
+<b>JSON Payload</b>
 <p/>
 <textarea id="payload" rows="5" cols="40">
 </textarea>
