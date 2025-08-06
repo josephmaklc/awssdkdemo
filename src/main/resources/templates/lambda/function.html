@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head th:include="fragments/layout :: headerFragment">
+	</head>
+<body>
+
+
+	<script>
+		$(document).ready(function() {
+
+		  $('#invokeButton').click(function() {
+		    console.log("on click");
+			var functionName = $("#functionName").val();
+			var payload = $("#payload").val();
+
+			$("#message").removeClass();
+			$("#message").addClass("alert alert-info");
+			$("#message").text("Invoking...");
+
+			$.ajax({
+		      type: "POST",
+		      url: "/lambda/invokeFunction",
+		      data: JSON.stringify({
+		        functionName: functionName,
+				payload: payload,
+				
+		      }),
+		      contentType: "application/json",
+		      success: function(response) {
+		        console.log("response is:", response);
+		          $("#message").addClass("alert alert-success");
+				  $("#message").text(response);
+
+		      },
+		      error: function(xhr, status, error) {
+				$("#message").addClass("alert alert-danger");
+				$("#message").text("An error occured");
+
+		        console.error("Error:", status, error);
+		      }
+
+		  });
+		}); //ready	  
+		 }); 
+		</script>
+<div class="container">
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item"><a href="/lambda">Lambda</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Lambda Function</li>
+  </ol>
+</nav>
+
+	
+<h1>Lambda Function</h1>
+
+
+<p/>
+<input type="hidden" id="functionName" th:value="${functionName}"/>
+<div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+<table class="table" th:if="${config!=null}">
+  <tbody>
+    <tr>
+      <td width="20%"><b>Function Name</b></td>
+      <td th:text="${config.functionName()}"/>
+    </tr>
+	<tr>
+	  <td><b>Function ARN</b></td>
+	  <td th:text="${config.functionArn()}"/>
+	</tr>
+	<tr>
+	  <td><b>Runtime</b></td>
+	  <td th:text="${config.runtimeAsString()}"/>
+	</tr>
+	<tr>
+	  <td><b>Memory Size</b></td>
+	  <td th:text="${config.memorySize()}+' MB'"/>
+	</tr>
+	<tr>
+	  <td><b>Timeout</b></td>
+	  <td th:text="${config.timeout()}"/>
+	</tr>
+	<tr>
+	  <td><b>IAM Role ARN</b></td>
+	  <td th:text="${config.role()}"/>
+	</tr>
+	  </tbody>
+</table>	
+<p/>
+<b>Payload</b>
+<p/>
+<textarea id="payload" rows="5" cols="40">
+</textarea>
+<p/>
+<div id="message" role="alert"></div>
+<p/>
+<button id="invokeButton" class="btn btn-primary">Invoke</button>
+</body>
+</html>

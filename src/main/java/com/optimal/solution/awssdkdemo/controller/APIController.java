@@ -14,15 +14,21 @@ import com.optimal.solution.awssdkdemo.Constants;
 import com.optimal.solution.awssdkdemo.model.DynamoDbJson;
 import com.optimal.solution.awssdkdemo.model.DynamoDbSearchParam;
 import com.optimal.solution.awssdkdemo.model.DynamoTableIdentitifer;
+import com.optimal.solution.awssdkdemo.model.LambdaFunctionParam;
 import com.optimal.solution.awssdkdemo.model.S3ItemIdentifier;
 import com.optimal.solution.awsutils.DynamoUtils;
+import com.optimal.solution.awsutils.LambdaUtils;
 import com.optimal.solution.awsutils.S3Utils;
 
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
+/**
+ * This class contains ajax calls from the front end
+ */
 @RestController
 public class APIController {
 
@@ -39,6 +45,7 @@ public class APIController {
 		S3Utils s3Utils = new S3Utils();
 		try { 
 			s3Utils.deleteFileS3(s3Client, request.getBucketName(), request.getItemKey());
+			s3Client.close();
 		} catch (Exception e) {
 			return e.getMessage();
 		}
@@ -54,6 +61,7 @@ public class APIController {
 		S3Utils s3Utils = new S3Utils();
 		try {
 			s3Utils.deleteBucket(s3Client, request.getBucketName());
+			s3Client.close();
 		} catch (Exception e) {
 			return e.getMessage();
 		}
@@ -70,6 +78,7 @@ public class APIController {
 		S3Utils s3Utils = new S3Utils();
 		try {
 			s3Utils.createBucket(s3Client, request.getBucketName());
+			s3Client.close();
 		} catch (Exception e) {
 			return e.getMessage();
 		}
@@ -86,6 +95,7 @@ public class APIController {
 		DynamoUtils dynamoUtils = new DynamoUtils();
 		try {
 			dynamoUtils.deleteTable(ddb, request.getTableName());
+			ddb.close();
 		} catch (Exception e) {
 			return e.getMessage();
 		}
@@ -107,6 +117,7 @@ public class APIController {
 		try {
 			dynamoUtils.createTable(ddb, request.getTableName(), request.getPrimaryKey(), request.getPrimaryKeyType(), request.getSortKey(),
 					request.getSortKeyType());
+			ddb.close();
 		} catch (Exception e) {
 			return e.getMessage();
 		}
@@ -124,6 +135,7 @@ public class APIController {
 		DynamoUtils dynamoUtils = new DynamoUtils();
 		try {
 			dynamoUtils.putJSONItemInTable(ddb, request.getTableName(), request.getJson());
+			ddb.close();
 		} catch (Exception e) {
 			return e.getMessage();
 		}
@@ -156,11 +168,49 @@ public class APIController {
 					result.add(item.toString());
 				});
 			 }
+			 ddb.close();
 			 return result;
 		} catch (Exception e) {
 			log.error("Error in query dynamo",e);
 			return null;
 		}
+
+	}
+	
+	@PostMapping("/lambda/deleteFunction")
+	public String deleteLambdaFunction(@RequestBody LambdaFunctionParam request) {
+		log.info("delete lambda: "+request.getFunctionName());
+
+		LambdaClient client = LambdaClient.builder().region(region).build();
+
+		LambdaUtils lambdaUtils = new LambdaUtils();
+		try {
+			lambdaUtils.deleteFunction(client, request.getFunctionName());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		return "SUCCESS";
+
+	}
+	
+
+	@PostMapping("/lambda/invokeFunction")
+	public String invokeFunction(@RequestBody LambdaFunctionParam request) {
+		log.info("invoke lambda: "+request.getFunctionName());
+		String result="";
+		LambdaClient client = LambdaClient.builder().region(region).build();
+
+		LambdaUtils lambdaUtils = new LambdaUtils();
+		try {
+			result = lambdaUtils.invokeFunction(client, request.getFunctionName(), request.getPayload());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		
+		return result;
 
 	}
 }

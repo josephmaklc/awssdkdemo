@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:include="fragments/layout :: headerFragment">
+</head>
+<body>
+
+
+<div class="container">
+
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+		<li class="breadcrumb-item active" aria-current="page">Lambda Functions</li>
+	  </ol>
+	</nav>
+
+<h1>Lambda Functions</h1>
+
+<p/>
+
+<script>
+        
+     function deleteItem() {
+	 var deleteThisItem = $("#deleteId").text();
+        console.log("deleting this item:"+deleteThisItem)
+	 $.ajax({
+	   type: "POST",
+	   url: "/lambda/deleteFunction",
+	   data: JSON.stringify({ 
+	     functionName: deleteThisItem
+	   }),
+	   contentType: "application/json", // or "text", "html", etc.
+	   success: function(response) {
+	     console.log("Success:", response);
+		 if (response == 'SUCCESS') {
+		 	          $("#messageDelete").addClass("alert alert-success");
+		 			  $("#messageDelete").text("Function deleted");
+
+		 	        } else {
+		 	          $("#messageDelete").addClass("alert alert-danger");
+		 			  $("#messageDelete").text(response);
+
+		 	        }
+					setTimeout(function() {
+					  // Code to be executed after some time
+					  location.reload()
+					}, 3000);
+	   },
+	   error: function(xhr, status, error) {
+	     console.error("Error:", status, error);
+	   }
+	 });
+        }
+     </script>
+
+	 <div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+	 <div id="messageDelete" role="alert"></div>
+		
+<table class="table table-bordered">
+  <thead class="table-dark">
+      <tr>
+         <td with="95%">Name</td>
+         <td width="5%">&nbsp;</td>
+      </tr>
+   </thead>
+   
+	<tr th:each="functionName: ${functions}">
+    <td><a th:href="'/lambda/function?functionName='+${functionName}" th:text="${functionName}"/></td>
+	<td style="text-align:center"> 
+	                 <button class="btn" th:data-myvar="${functionName}" th:onClick="confirmDeleteItem(this.getAttribute('data-myvar'))">
+					<i class="bi bi-trash3"></i>
+				</button>
+	</td>
+	
+</table>
+<div th:insert="fragments/deletedialog"/>
+
+</div>
+
+</body>
+</html>
