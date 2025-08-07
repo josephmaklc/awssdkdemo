@@ -16,15 +16,20 @@ import com.optimal.solution.awssdkdemo.model.DynamoDbSearchParam;
 import com.optimal.solution.awssdkdemo.model.DynamoTableIdentitifer;
 import com.optimal.solution.awssdkdemo.model.LambdaFunctionParam;
 import com.optimal.solution.awssdkdemo.model.S3ItemIdentifier;
+import com.optimal.solution.awssdkdemo.model.SNSMessageParam;
+import com.optimal.solution.awssdkdemo.model.SNSSubscriberParam;
+import com.optimal.solution.awssdkdemo.model.SNSTopicParam;
 import com.optimal.solution.awsutils.DynamoUtils;
 import com.optimal.solution.awsutils.LambdaUtils;
 import com.optimal.solution.awsutils.S3Utils;
+import com.optimal.solution.awsutils.SnsUtils;
 
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.sns.SnsClient;
 
 /**
  * This class contains ajax calls from the front end
@@ -190,11 +195,8 @@ public class APIController {
 		} catch (Exception e) {
 			return e.getMessage();
 		}
-		
 		return "SUCCESS";
-
 	}
-	
 
 	@PostMapping("/lambda/invokeFunction")
 	public String invokeFunction(@RequestBody LambdaFunctionParam request) {
@@ -209,8 +211,89 @@ public class APIController {
 		} catch (Exception e) {
 			return e.getMessage();
 		}
-		
 		return result;
+	}
+	
+	@PostMapping("/sns/deleteTopic")
+	public String deleteSNSTopic(@RequestBody SNSTopicParam request) {
+		log.info("delete topic: "+request.getArn());
+
+		SnsClient client = SnsClient.builder().region(region).build();
+
+		SnsUtils snsUtils = new SnsUtils();
+		try {
+			snsUtils.deleteSNSTopic(client, request.getArn());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return "SUCCESS";
+	}
+
+	@PostMapping("/sns/addTopic")
+	public String addSNSTopic(@RequestBody SNSTopicParam request) {
+		log.info("add topic: "+request.getTopicName());
+
+		SnsClient client = SnsClient.builder().region(region).build();
+
+		SnsUtils snsUtils = new SnsUtils();
+		try {
+			snsUtils.createSNSTopic(client, request.getTopicName());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return "SUCCESS";
+
+	}
+
+	@PostMapping("/sns/addsubscriber")
+	public String addSubscriber(@RequestBody SNSSubscriberParam request) {
+		log.info("addSubscriber:"+request.getArn());
+
+		SnsClient client = SnsClient.builder().region(region).build();
+
+		SnsUtils snsUtils = new SnsUtils();
+		try {
+			snsUtils.subscribe(client, request.getArn(),request.getProtocol(),request.getEndpoint());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return "SUCCESS";
+
+	}
+	@PostMapping("/sns/deletesubscriber")
+	public String deleteSNSSubscriber(@RequestBody SNSSubscriberParam request) {
+		log.info("deleteSubscriber:"+request.getArn());
+
+		SnsClient client = SnsClient.builder().region(region).build();
+
+		SnsUtils snsUtils = new SnsUtils();
+		try {
+			snsUtils.unSub(client, request.getArn());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return "SUCCESS";
+
+	}
+	
+	@PostMapping("/sns/publish")
+	public String doPublish(@RequestBody SNSMessageParam request) {
+		log.info("publish message:"+request.getTopicArn()+" "+request.getMessage());
+
+		SnsClient client = SnsClient.builder().region(region).build();
+
+		SnsUtils snsUtils = new SnsUtils();
+		try {
+			snsUtils.pubTopic(client, request.getMessage(), request.getTopicArn());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return "SUCCESS";
 
 	}
 }

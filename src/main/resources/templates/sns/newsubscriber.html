@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:insert="~{fragments/layout :: headerFragment}"></div>
+</head>
+</head>
+<script>
+	$(document).ready(function() {
+
+	  $('#addButton').click(function() {
+	    console.log("on click");
+		
+		var selectElement = document.getElementById('protocol'); // Get the select element by its ID
+		var protocol = selectElement.value;
+		var topicArn = $("#topicArn").val();
+		var endpoint = $("#endpoint").val();
+	    console.log("adding this endpoint:" + endpoint);
+		$("#message").removeClass();
+		$.ajax({
+	      type: "POST",
+	      url: "/sns/addsubscriber",
+	      data: JSON.stringify({
+			arn: topicArn,
+	        protocol: protocol,
+			endpoint: endpoint
+	      }),
+	      contentType: "application/json",
+	      success: function(response) {
+	        console.log("response is:", response);
+			if (response == 'SUCCESS') {
+	          $("#message").addClass("alert alert-success");
+			  $("#message").text("Subscriber added");
+	        } else {
+	          $("#message").addClass("alert alert-danger");
+			  $("#message").text(response);
+
+	        }
+	      },
+	      error: function(xhr, status, error) {
+			$("#message").addClass("alert alert-danger");
+			$("#message").text("An error occured");
+
+	        console.error("Error:", status, error);
+			
+
+	      }
+	    });
+
+	  });
+
+	}); //ready	  
+	  
+	</script>
+<body>
+
+
+<div class="container">
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+	    <li class="breadcrumb-item"><a href="/sns">SNS</a></li>
+		<li class="breadcrumb-item"><a th:href="'/sns/topic?topicArn='+${topicArn}">SNS Topic</a></li>
+	    <li class="breadcrumb-item active" aria-current="page">Add New Subscriber</li>
+	  </ol>
+	</nav>	
+
+<h1>Add New Subscriber</h1>
+
+<table  class="table table-bordered">
+<tr><td>Topic ARN</td><td th:text="${topicArn}"/> <input type="hidden" id="topicArn" th:value="${topicArn}"/></td></tr>
+<tr><td>Endpoint:</td><td> <input type="text" id="endpoint" size="40"/></td>
+<tr><td>Protocol:</td><td> <select id="protocol">
+  <option value="email">Email</option>
+  </select>
+</td></tr>
+</table/>
+
+<p/>
+<div id="message" role="alert"></div>
+<p/>
+<button id="addButton" class="btn btn-primary">Add</button>
+<a href="javascript:history.back()" class="btn btn-secondary" role="button">Cancel</a>
+<p/>
+
+</div>
+
+</body>
+</html>

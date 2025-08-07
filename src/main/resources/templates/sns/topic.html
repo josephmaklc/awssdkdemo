@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head th:insert="~{fragments/layout :: headerFragment}"></div>
+	</head>
+<body>
+
+
+	<script>
+		
+		function deleteItem() {
+			 var deleteThisItem = $("#deleteId").text();
+			       console.log("deleting this item:"+deleteThisItem)
+			 $.ajax({
+			   type: "POST",
+			   url: "/sns/deletesubscriber",
+			   data: JSON.stringify({ 
+			     arn: deleteThisItem
+			   }),
+			   contentType: "application/json", // or "text", "html", etc.
+			   success: function(response) {
+			     console.log("Success:", response);
+				 if (response == 'SUCCESS') {
+				 	          $("#messageDelete").addClass("alert alert-success");
+				 			  $("#messageDelete").text("Unsubscribed");
+	
+				 	        } else {
+				 	          $("#messageDelete").addClass("alert alert-danger");
+				 			  $("#messageDelete").text(response);
+	
+				 	        }
+							setTimeout(function() {
+							  // Code to be executed after some time
+							  location.reload()
+							}, 3000);
+			   },
+			   error: function(xhr, status, error) {
+			     console.error("Error:", status, error);
+			   }
+			 });
+		}
+
+		$(document).ready(function() {
+				
+		  $('#publish').click(function() {
+		    console.log("on click");
+			var topicArn = $("#topicArn").val();
+			var messageToSend = $("#messageToSend").val();
+
+			$("#message").removeClass();
+			$("#message").addClass("alert alert-info");
+			$("#message").text("Sending...");
+
+			$.ajax({
+		      type: "POST",
+		      url: "/sns/publish",
+		      data: JSON.stringify({
+		        topicArn: topicArn,
+				message: messageToSend,
+				
+		      }),
+		      contentType: "application/json",
+		      success: function(response) {
+		        console.log("response is:", response);
+		          $("#message").addClass("alert alert-success");
+				  $("#message").text("Message sent to subscribers");
+
+		      },
+		      error: function(xhr, status, error) {
+				$("#message").addClass("alert alert-danger");
+				$("#message").text("An error occured");
+
+		        console.error("Error:", status, error);
+		      }
+
+		  });
+		}); //ready	  
+		 }); 
+		</script>
+<div class="container">
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+	<li class="breadcrumb-item"><a href="/">Home</a></li>
+	<li class="breadcrumb-item"><a href="/sns">SNS</a></li>
+	<li class="breadcrumb-item active" aria-current="page">Topic</li>
+
+  </ol>
+</nav>
+
+	
+<h1>SNS Topic</h1>
+
+
+<p/>
+<input type="hidden" id="topicArn" th:value="${topicArn}"/>
+<div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+
+<table class="table" th:if="${attributes!=null}">
+  <tbody>
+    <tr>
+      <td width="20%"><b>Topic ARN</b></td>
+      <td th:text="${attributes['TopicArn']}"/>
+    </tr>
+	<tr>
+	    <td width="20%"><b>Owner</b></td>
+	    <td th:text="${attributes['Owner']}"/>
+	  </tr>
+	<tr>
+	  <td width="20%"><b>Subscriptions Confirmed</b></td>
+	  <td th:text="${attributes['SubscriptionsConfirmed']}"/>
+	</tr>
+	<tr>
+	  <td width="20%"><b>Subscriptions Pending</b></td>
+	  <td th:text="${attributes['SubscriptionsPending']}"/>
+	</tr>
+	<tr>
+	  <td width="20%"><b>Subscriptions Deleted</b></td>
+	  <td th:text="${attributes['SubscriptionsDeleted']}"/>
+	</tr>
+	  </tbody>
+</table>	
+<p/>
+<h2  th:if="${not #lists.isEmpty(subscriptions)}">Subscriptions</h2>
+
+
+ <table class="table table-bordered" th:if="${not #lists.isEmpty(subscriptions)}">
+ <thead class="table-dark">
+   <tr>
+      <td with="42%">Endpoint</td>
+	  <td with="32%">Protocol</td>
+	  <td with="21%">Status</td>
+      <td width="5%">&nbsp;</td>
+   </tr>
+</thead>
+
+<tr th:each="subscription: ${subscriptions}">
+	<td th:text="${subscription.endpoint()}"/>
+	<td th:text="${subscription.protocol()}"/>
+	<td th:text="${#strings.endsWith(subscription.subscriptionArn(),':PendingConfirmation')}?'Pending':'Confirmed'"/>
+	<td style="text-align:center"> 
+                 <button class="btn" th:data-myvar="${subscription.subscriptionArn()}" th:onClick="confirmDeleteItem(this.getAttribute('data-myvar'))">
+				<i class="bi bi-trash3"></i>
+			</button>
+	</td>
+</table>
+<div th:insert="~{fragments/deletedialog}"/>
+
+<div id="message" role="alert"></div>
+<p/>
+<a th:href="'/sns/addsubscriber?topicArn='+${topicArn}" class="btn btn-primary" role="button">Add Subscriber</a>
+<p/>
+<b>Message:</b> <input type="text" id="messageToSend"/>
+<p/>
+<button id="publish" class="btn btn-primary">Publish</button>
+
+</body>
+</html>

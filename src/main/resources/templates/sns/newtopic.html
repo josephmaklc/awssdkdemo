@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:insert="~{fragments/layout :: headerFragment}"></div>
+</head>
+</head>
+<script>
+	$(document).ready(function() {
+
+	  $('#addButton').click(function() {
+	    console.log("on click");
+		var newTopic = $("#topicName").val();
+	    console.log("adding this topic:" + newTopic);
+		$("#message").removeClass();
+		$.ajax({
+	      type: "POST",
+	      url: "/sns/addTopic",
+	      data: JSON.stringify({
+	        topicName: newTopic
+	      }),
+	      contentType: "application/json",
+	      success: function(response) {
+	        console.log("response is:", response);
+			if (response == 'SUCCESS') {
+	          $("#message").addClass("alert alert-success");
+			  $("#message").text("Topic added");
+	        } else {
+	          $("#message").addClass("alert alert-danger");
+			  $("#message").text(response);
+
+	        }
+	      },
+	      error: function(xhr, status, error) {
+			$("#message").addClass("alert alert-danger");
+			$("#message").text("An error occured");
+
+	        console.error("Error:", status, error);
+			
+
+	      }
+	    });
+
+	  });
+
+	}); //ready	  
+	  
+	</script>
+<body>
+
+
+<div class="container">
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+	    <li class="breadcrumb-item"><a href="/sns">SNS</a></li>
+	    <li class="breadcrumb-item active" aria-current="page">Add New Topic</li>
+	  </ol>
+	</nav>	
+
+<h1>Add New Topic</h1>
+
+Topic name: <input type="text" id="topicName"/>
+<p/>
+<div id="message" role="alert"></div>
+<p/>
+<button id="addButton" class="btn btn-primary">Add</button>
+<a href="javascript:history.back()" class="btn btn-secondary" role="button">Cancel</a>
+<p/>
+
+</div>
+
+</body>
+</html>

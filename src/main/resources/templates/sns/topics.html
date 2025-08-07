@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:insert="~{fragments/layout :: headerFragment}"></div>
+</head>
+<body>
+
+
+<div class="container">
+
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+		<li class="breadcrumb-item active" aria-current="page">SNS</li>
+	  </ol>
+	</nav>
+
+<h1>Simple Notification Service (SNS)</h1>
+
+SNS is a fully managed messaging service that enables applications, users, and devices to send and receive notifications instantly from the cloud<p/>
+
+<script>
+        
+    function deleteItem() {
+	 var deleteThisItem = $("#deleteId").text();
+        console.log("deleting this item:"+deleteThisItem)
+	 $.ajax({
+	   type: "POST",
+	   url: "/sns/deleteTopic",
+	   data: JSON.stringify({ 
+	     arn: deleteThisItem
+	   }),
+	   contentType: "application/json", // or "text", "html", etc.
+	   success: function(response) {
+	     console.log("Success:", response);
+		 location.reload()
+	   },
+	   error: function(xhr, status, error) {
+	     console.error("Error:", status, error);
+	   }
+	 });
+        }
+     </script>
+
+	 <div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+		
+	 <table class="table table-bordered" th:if="${not #lists.isEmpty(topics)}">
+	 <thead class="table-dark">
+      <tr>
+         <td with="95%">Topic</td>
+         <td width="5%">&nbsp;</td>
+      </tr>
+   </thead>
+   
+	<tr th:each="topic: ${topics}">
+    <td><a th:href="'/sns/topic?topicArn='+${topic.topicArn()}" th:text="${topic.topicArn()}"/></td>
+	<td style="text-align:center"> 
+	                 <button class="btn" th:data-myvar="${topic.topicArn()}" th:onClick="confirmDeleteItem(this.getAttribute('data-myvar'))">
+					<i class="bi bi-trash3"></i>
+				</button>
+	</td>
+	
+</table>
+<div th:insert="~{fragments/deletedialog}"/>
+<a href="/sns/addtopic" class="btn btn-primary" role="button">Add</a>
+
+</div>
+
+</body>
+</html>

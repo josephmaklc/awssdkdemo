@@ -13,10 +13,13 @@ import com.optimal.solution.awssdkdemo.Constants;
 import com.optimal.solution.awsutils.DynamoUtils;
 import com.optimal.solution.awsutils.LambdaUtils;
 import com.optimal.solution.awsutils.S3Utils;
+import com.optimal.solution.awsutils.SnsUtils;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.model.Topic;
 
 @Controller
 public class HomeController {
@@ -94,6 +97,29 @@ public class HomeController {
 		ModelAndView result = new ModelAndView();
 		result.setViewName("lambda/functions");
 		result.addObject("functions", functions);
+		result.addObject("error", message);
+		return result;
+
+	}
+	
+	@GetMapping("/sns")
+	public ModelAndView snsDemo() {
+		log.info("listing all sns topics");
+		SnsClient snsClient = SnsClient.builder().region(Constants.REGION).build();
+
+		SnsUtils snsUtils = new SnsUtils();
+		String message = "";
+		List<Topic> topics = new ArrayList<>();
+		try {
+			topics = snsUtils.listSNSTopics(snsClient);
+		} catch (Exception e) {
+			message = e.getMessage();
+		}
+		snsClient.close();
+		
+		ModelAndView result = new ModelAndView();
+		result.setViewName("sns/topics");
+		result.addObject("topics", topics);
 		result.addObject("error", message);
 		return result;
 
