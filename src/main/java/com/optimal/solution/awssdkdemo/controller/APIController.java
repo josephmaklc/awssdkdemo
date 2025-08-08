@@ -19,10 +19,12 @@ import com.optimal.solution.awssdkdemo.model.S3ItemIdentifier;
 import com.optimal.solution.awssdkdemo.model.SNSMessageParam;
 import com.optimal.solution.awssdkdemo.model.SNSSubscriberParam;
 import com.optimal.solution.awssdkdemo.model.SNSTopicParam;
+import com.optimal.solution.awssdkdemo.model.SQSQueueParam;
 import com.optimal.solution.awsutils.DynamoUtils;
 import com.optimal.solution.awsutils.LambdaUtils;
 import com.optimal.solution.awsutils.S3Utils;
 import com.optimal.solution.awsutils.SnsUtils;
+import com.optimal.solution.awsutils.SqsUtils;
 
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -30,6 +32,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sqs.SqsClient;
 
 /**
  * This class contains ajax calls from the front end
@@ -37,7 +40,7 @@ import software.amazon.awssdk.services.sns.SnsClient;
 @RestController
 public class APIController {
 
-	Logger log = LoggerFactory.getLogger(S3DemoController.class);
+	Logger log = LoggerFactory.getLogger(APIController.class);
 
 	Region region = Constants.REGION;
 
@@ -295,5 +298,70 @@ public class APIController {
 		}
 		return "SUCCESS";
 
+	}
+	
+	@PostMapping("/sqs/addQueue")
+	public String addQueue(@RequestBody SQSQueueParam queueParam) {
+		log.info("add queue:"+queueParam.getQueueName());
+
+		SqsClient client = SqsClient.builder().region(region).build();
+
+		SqsUtils sqsUtils = new SqsUtils();
+		try {
+			sqsUtils.addQueue(client, queueParam.getQueueName());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return "SUCCESS";
+
+	}
+	
+	@PostMapping("/sqs/deleteQueue")
+	public String deleteQueue(@RequestBody SQSQueueParam queueParam) {
+		log.info("delete queue:"+queueParam.getQueueUrl());
+
+		SqsClient client = SqsClient.builder().region(region).build();
+
+		SqsUtils sqsUtils = new SqsUtils();
+		try {
+			sqsUtils.deleteQueue(client, queueParam.getQueueUrl());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return "SUCCESS";
+
+	}
+	
+	@PostMapping("/sqs/sendMessage")
+	public String sendSQSMessage(@RequestBody SQSQueueParam queueParam) {
+		log.info("Send queue messsage: "+queueParam.getQueueUrl()+" message: "+queueParam.getMessage());
+		SqsClient client = SqsClient.builder().region(region).build();
+
+		SqsUtils sqsUtils = new SqsUtils();
+		try {
+			sqsUtils.sendSQSMessage(client, queueParam.getQueueUrl(), queueParam.getMessage());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return "SUCCESS";
+	}
+	
+	@PostMapping("/sqs/pollMessages")
+	public String pollMessages(@RequestBody SQSQueueParam queueParam) {
+		log.info("poll queue messsages for: "+queueParam.getQueueUrl());
+		SqsClient client = SqsClient.builder().region(region).build();
+
+		String result="";
+		SqsUtils sqsUtils = new SqsUtils();
+		try {
+			result = sqsUtils.pollSQSMessages(client, queueParam.getQueueUrl());
+			client.close();
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+		return result;
 	}
 }

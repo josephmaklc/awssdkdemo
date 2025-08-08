@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head th:insert="~{fragments/layout :: headerFragment}"></div>
+	</head>
+<body>
+
+
+	<script>
+		
+		$(document).ready(function() {
+				
+		  $('#send').click(function() {
+		    console.log("on click send");
+			var queueUrl = $("#queue").val();
+			var messageToSend = $("#messageToSend").val();
+
+			$("#message").removeClass();
+			$("#message").addClass("alert alert-info");
+			$("#message").text("Sending...");
+
+			$.ajax({
+		      type: "POST",
+		      url: "/sqs/sendMessage",
+		      data: JSON.stringify({
+		        queueUrl: queueUrl,
+				message: messageToSend,
+				
+		      }),
+		      contentType: "application/json",
+		      success: function(response) {
+		        console.log("response is:", response);
+		          $("#message").addClass("alert alert-success");
+				  $("#message").text("Message sent to queue");
+
+		      },
+		      error: function(xhr, status, error) {
+				$("#message").addClass("alert alert-danger");
+				$("#message").text("An error occured");
+
+		        console.error("Error:", status, error);
+		      }
+
+		  });
+		}); 
+		
+		$('#receive').click(function() {
+			    console.log("on click receive");
+				var queueUrl = $("#queue").val();
+	
+
+				$("#message").removeClass();
+				$("#message").addClass("alert alert-info");
+				$("#message").text("Polling...");
+
+				$.ajax({
+			      type: "POST",
+			      url: "/sqs/pollMessages",
+			      data: JSON.stringify({
+			        queueUrl: queueUrl
+			      }),
+			      contentType: "application/json",
+			      success: function(response) {
+			        console.log("response is:", response);
+					  $("#message").text("Done Polling");
+					  $("#messagesReceived").text(response);
+
+			      },
+			      error: function(xhr, status, error) {
+					$("#message").addClass("alert alert-danger");
+					$("#message").text("An error occured");
+
+			        console.error("Error:", status, error);
+			      }
+
+			  });
+			}); 
+		  
+		 }); 
+		</script>
+<div class="container">
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+	<li class="breadcrumb-item"><a href="/">Home</a></li>
+	<li class="breadcrumb-item"><a href="/sqs">SQS</a></li>
+	<li class="breadcrumb-item active" aria-current="page">Queue</li>
+
+  </ol>
+</nav>
+
+	
+<h1>SQS Queue</h1>
+
+
+<p/>
+<input type="hidden" id="queue" th:value="${queue}"/>
+<div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+
+
+<table class="table" th:if="${attributes!=null}">
+  <tbody>
+	
+	<tr th:each="attribute : ${attributes}">
+		<td width="20%"><b th:text="${attribute.key}"/></td>
+		<td th:text="${attribute.value}"/>
+	  </tbody>
+</table>	
+<p/>
+<div id="message" role="alert"></div>
+<p/>
+<b>Message:</b> <input type="text" id="messageToSend"/>
+<p/>
+<button id="send" class="btn btn-primary">Send</button>
+<hr/>
+<button id="receive" class="btn btn-primary">Poll Messages</button>
+<br/>
+<b>Messages received:</b>
+<div id="messagesReceived"/>
+<p/>
+</body>
+</html>

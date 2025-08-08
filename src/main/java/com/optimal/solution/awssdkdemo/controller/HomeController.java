@@ -14,12 +14,14 @@ import com.optimal.solution.awsutils.DynamoUtils;
 import com.optimal.solution.awsutils.LambdaUtils;
 import com.optimal.solution.awsutils.S3Utils;
 import com.optimal.solution.awsutils.SnsUtils;
+import com.optimal.solution.awsutils.SqsUtils;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.Topic;
+import software.amazon.awssdk.services.sqs.SqsClient;
 
 @Controller
 public class HomeController {
@@ -120,6 +122,29 @@ public class HomeController {
 		ModelAndView result = new ModelAndView();
 		result.setViewName("sns/topics");
 		result.addObject("topics", topics);
+		result.addObject("error", message);
+		return result;
+
+	}
+	
+	@GetMapping("/sqs")
+	public ModelAndView sqsDemo() {
+		log.info("listing all sqs queues");
+		SqsClient sqsClient = SqsClient.builder().region(Constants.REGION).build();
+
+		SqsUtils sqsUtils = new SqsUtils();
+		String message = "";
+		List<String> queues = new ArrayList<>();
+		try {
+			queues = sqsUtils.listQueues(sqsClient);
+		} catch (Exception e) {
+			message = e.getMessage();
+		}
+		sqsClient.close();
+		
+		ModelAndView result = new ModelAndView();
+		result.setViewName("sqs/queues");
+		result.addObject("queues", queues);
 		result.addObject("error", message);
 		return result;
 

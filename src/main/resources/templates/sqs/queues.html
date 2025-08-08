@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:insert="~{fragments/layout :: headerFragment}"></div>
+</head>
+<body>
+
+
+<div class="container">
+
+	<nav aria-label="breadcrumb">
+	  <ol class="breadcrumb">
+	    <li class="breadcrumb-item"><a href="/">Home</a></li>
+		<li class="breadcrumb-item active" aria-current="page">SQS</li>
+	  </ol>
+	</nav>
+
+<h1>Simple Queue Service (SQS)</h1>
+
+Amazon Simple Queue Service (Amazon SQS) lets you send, store, and receive messages between software components.
+<p/>
+<script>
+        
+    function deleteItem() {
+	 var deleteThisItem = $("#deleteId").text();
+        console.log("deleting this item:"+deleteThisItem)
+	 $.ajax({
+	   type: "POST",
+	   url: "/sqs/deleteQueue",
+	   data: JSON.stringify({ 
+	     queueUrl: deleteThisItem
+	   }),
+	   contentType: "application/json", // or "text", "html", etc.
+	   success: function(response) {
+	     console.log("Success:", response);
+		 location.reload()
+	   },
+	   error: function(xhr, status, error) {
+	     console.error("Error:", status, error);
+	   }
+	 });
+        }
+     </script>
+
+	 <div th:if="${not #strings.isEmpty(error)}" id="message" class="alert alert-danger" role="alert" th:text="${error}"></div>
+		
+	 <table class="table table-bordered" th:if="${not #lists.isEmpty(queues)}">
+	 <thead class="table-dark">
+      <tr>
+         <td with="95%">Queue Url</td>
+         <td width="5%">&nbsp;</td>
+      </tr>
+   </thead>
+   
+	<tr th:each="queue: ${queues}">
+    <td><a th:href="'/sqs/queue?queue='+${queue}" th:text="${queue}"/></td>
+	<td style="text-align:center"> 
+	                 <button class="btn" th:data-myvar="${queue}" th:onClick="confirmDeleteItem(this.getAttribute('data-myvar'))">
+					<i class="bi bi-trash3"></i>
+				</button>
+	</td>
+	
+</table>
+<div th:insert="~{fragments/deletedialog}"/>
+<a href="/sqs/addqueue" class="btn btn-primary" role="button">Add</a>
+
+</div>
+
+</body>
+</html>

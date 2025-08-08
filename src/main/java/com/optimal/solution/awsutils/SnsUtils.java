@@ -25,7 +25,6 @@ import software.amazon.awssdk.services.sns.model.SubscribeResponse;
 import software.amazon.awssdk.services.sns.model.Subscription;
 import software.amazon.awssdk.services.sns.model.Topic;
 import software.amazon.awssdk.services.sns.model.UnsubscribeRequest;
-import software.amazon.awssdk.services.sns.model.UnsubscribeResponse;
 
 public class SnsUtils {
 
