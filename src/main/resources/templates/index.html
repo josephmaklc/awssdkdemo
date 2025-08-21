@@ -1,7 +1,17 @@
-<title>Welcome to AWS SDK Demo</title>
+<!DOCTYPE html>
+<html lang="en">
 
+<head th:insert="~{fragments/layout :: headerFragment}"></div>
+
+</head>
+<title>Welcome to AWS SDK Demo</title>
+<body>
+
+
+<div class="container">
 <h1>Welcome to AWS SDK Demo</h1>
 
+<!--
 <ul>
 	<li><a href="/s3buckets">S3 Demo</a></li>
 	<li><a href="/dynamo">DynamoDB Demo</a></li>
@@ -9,3 +19,59 @@
 	<li><a href="/sns">SNS Demo</a></li>
 	<li><a href="/sqs">SQS Demo</a></li>
 </ul>
+-->
+This program demonstrates using various basic Amazon Web Services using the <a href="https://aws.amazon.com/sdk-for-java/">AWS SDK for Java</a>.
+You will need to have a AWS account with permissions using these services. See <a href="https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/get-started-auth.html">here for details.
+	
+<p/>
+<div class="container">
+  <div class="row">
+    <div class="col-md-2">
+      <div class="position-relative">
+        <a href="/s3buckets" class="stretched-link">
+          <img src="/images/Simple Storage Service.png" width="120px" class="img-fluid"><br/>
+		  S3 Demo
+        </a>
+      </div>
+    </div>
+	<div class="col-md-2">
+	  <div class="position-relative">
+	    <a href="/dynamo" class="stretched-link">
+	      <img src="/images/DynamoDB.png" width="120px" class="img-fluid"><br/>
+		  DynamoDB Demo
+	    </a>
+	  </div>
+	</div>
+	<div class="col-md-2">
+	  <div class="position-relative">
+	    <a href="/lambda" class="stretched-link">
+	      <img src="/images/Simple Storage Service.png" width="120px" class="img-fluid"><br/>
+		  Lambda Demo
+	    </a>
+	  </div>
+	</div>
+
+	<div class="col-md-2">
+	    <div class="position-relative">
+	      <a href="/sns" class="stretched-link">
+	        <img src="/images/Simple Notification Service.png" width="120px" class="img-fluid"><br/>
+		  SNS Demo
+	      </a>
+	    </div>
+	  </div>
+	<div class="col-md-2">
+	  <div class="position-relative">
+	    <a href="/sqs" class="stretched-link">
+	      <img src="/images/Simple Queue Service.png" width="120px" class="img-fluid"><br/>
+		 SQS Demo
+	    </a>
+	  </div>
+	</div>
+	
+  </div>
+</div>
+</body>
+</html>
+
+
+

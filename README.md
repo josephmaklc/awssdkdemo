@@ -14,3 +14,30 @@ In the Constants.java file I have a constant named REGION. Change it to whatever
 
 Once you have the Springboot project running, launch with
 [http://localhost:5000](http://localhost:5000)
+
+## Screenshots
+<img src="screenshot/pic1.png" width="450px"/>
+<br/>
+<img src="screenshot/pic2.png" width="450px"/>
+<br/>
+<img src="screenshot/pic3.png" width="450px"/>
+<br/>
+<img src="screenshot/pic4.png" width="450px"/>
+<br/>
+<img src="screenshot/pic5.png" width="450px"/>
+<br/>
+<img src="screenshot/pic6.png" width="450px"/>
+<br/>
+<img src="screenshot/pic7.png" width="450px"/>
+<br/>
+<img src="screenshot/pic8.png" width="450px"/>
+<br/>
+<img src="screenshot/pic9.png" width="450px"/>
+<br/>
+<img src="screenshot/pic10.png" width="450px"/>
+<br/>
+<img src="screenshot/pic11.png" width="450px"/>
+<br/>
+<img src="screenshot/pic12.png" width="450px"/>
+<br/>
+<img src="screenshot/pic13.png" width="450px"/>
